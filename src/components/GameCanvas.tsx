@@ -54,6 +54,7 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ gameState, onGameOver, onBack }
   const [rally, setRally] = useState(0);
   const [lives, setLives] = useState(3);
   const [time, setTime] = useState(0);
+  const [isPortrait, setIsPortrait] = useState(false);
   
   const CANVAS_WIDTH = 1200;
   const CANVAS_HEIGHT = 800;
@@ -107,6 +108,14 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ gameState, onGameOver, onBack }
         l: 8 + Math.random() * 12
       }));
     }
+
+    const checkOrientation = () => {
+      setIsPortrait(window.innerHeight > window.innerWidth);
+    };
+
+    checkOrientation();
+    window.addEventListener('resize', checkOrientation);
+    return () => window.removeEventListener('resize', checkOrientation);
   }, [gameState.currentStageIndex]);
 
   useEffect(() => {
@@ -517,9 +526,9 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ gameState, onGameOver, onBack }
       ctx.beginPath(); ctx.arc(ball.x, ball.y, BALL_RADIUS * 1.2, 0, Math.PI * 2); ctx.fill();
       ctx.shadowBlur = 0;
 
-      // HUD (Centered)
-      ctx.fillStyle = '#FFFFFF'; ctx.font = '900 36px Inter'; ctx.textAlign = 'center';
-      ctx.fillText(`PONTOS: ${score}`, canvas.width / 2, 50);
+      // HUD (Centered) - Increased font size for mobile scaling
+      ctx.fillStyle = '#FFFFFF'; ctx.font = '900 48px Inter'; ctx.textAlign = 'center';
+      ctx.fillText(`PONTOS: ${score}`, canvas.width / 2, 60);
       
       const hudTarget = gameState.boss?.targetScore || 1000;
       const progressBaseline = (gameState.currentStageIndex === 0) ? 0 : 0; // The progress should be relative to the stage total.
@@ -577,11 +586,25 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ gameState, onGameOver, onBack }
           height={CANVAS_HEIGHT} 
           className="w-full h-full object-contain cursor-none transition-opacity duration-500" 
         />
+        
+        {/* Mobile Orientation Overlay */}
+        {isPortrait && (
+          <div className="absolute inset-0 z-50 bg-black/90 backdrop-blur-xl flex flex-col items-center justify-center p-8 text-center">
+            <div className="w-20 h-20 mb-6 border-4 border-[#FF4E6B] rounded-2xl animate-spin-slow flex items-center justify-center">
+              <span className="text-4xl">📱</span>
+            </div>
+            <h3 className="text-white font-black text-2xl uppercase tracking-tighter mb-4">Gire seu aparelho</h3>
+            <p className="text-slate-400 font-bold text-sm uppercase tracking-widest leading-relaxed">
+              Para uma melhor experiência no Frescobol, jogue em modo <span className="text-[#FF4E6B]">PAISAGEM</span>.
+            </p>
+          </div>
+        )}
+
         <button 
           onClick={onBack} 
-          className="absolute bottom-4 right-4 md:bottom-6 md:right-6 z-20 px-6 py-3 md:px-8 md:py-4 bg-black/40 hover:bg-black/80 backdrop-blur-xl text-white font-black text-[10px] md:text-xs uppercase tracking-[0.3em] rounded-full border-2 border-white/30 transition-all duration-300 shadow-2xl active:scale-95"
+          className="absolute bottom-4 left-4 md:bottom-6 md:right-6 md:left-auto z-20 px-6 py-3 md:px-8 md:py-4 bg-black/40 hover:bg-black/80 backdrop-blur-xl text-white font-black text-[10px] md:text-xs uppercase tracking-[0.3em] rounded-full border-2 border-white/30 transition-all duration-300 shadow-2xl active:scale-95"
         >
-          Sair do Jogo
+          Sair
         </button>
       </div>
     </div>

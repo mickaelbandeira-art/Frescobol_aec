@@ -19,25 +19,25 @@ const StageSelect: React.FC<StageSelectProps> = ({ unlockedIndex, onSelect, onBa
     >
       <div className="absolute inset-0 bg-white/20 backdrop-blur-[2px]" />
 
-      <header className="relative z-10 max-w-7xl mx-auto w-full flex justify-between items-start mb-4 md:mb-8">
-        <div className="bg-white/95 p-4 md:p-6 rounded-[30px] md:rounded-[40px] border-4 md:border-8 border-[#3164F4] shadow-2xl transform -rotate-1">
-          <h2 className="text-2xl md:text-4xl font-black uppercase tracking-tighter leading-none text-[#3164F4]">
+      <header className="relative z-10 max-w-7xl mx-auto w-full flex flex-col md:flex-row justify-between items-center md:items-start gap-4 mb-4 md:mb-8">
+        <div className="bg-white/95 p-4 md:p-6 rounded-[25px] md:rounded-[40px] border-4 md:border-8 border-[#3164F4] shadow-2xl transform md:-rotate-1 text-center md:text-left">
+          <h2 className="text-xl md:text-4xl font-black uppercase tracking-tighter leading-none text-[#3164F4]">
             Hierarquia <span className="text-[#FF4E6B]">Corporativa</span>
           </h2>
-          <p className="mt-1 text-slate-600 font-bold uppercase text-[9px] md:text-xs tracking-widest">
+          <p className="mt-1 text-slate-600 font-bold uppercase text-[8px] md:text-xs tracking-widest">
             Olá, <span className="text-[#3164F4]">{user?.email?.split('@')[0] || 'Player'}</span>! Vença os gestores para subir.
           </p>
         </div>
-        <div className="flex gap-2 md:gap-4">
+        <div className="flex gap-2 md:gap-4 w-full md:w-auto justify-center">
           <button 
             onClick={onBack}
-            className="px-4 py-2 md:px-6 md:py-3 bg-white text-[#3164F4] font-black text-[10px] md:text-xs uppercase tracking-widest rounded-full shadow-lg border-2 md:border-4 border-[#3164F4] hover:bg-slate-50 transition-all duration-300"
+            className="flex-1 md:flex-none px-4 py-2 md:px-6 md:py-3 bg-white text-[#3164F4] font-black text-[10px] md:text-xs uppercase tracking-widest rounded-full shadow-lg border-2 md:border-4 border-[#3164F4] hover:bg-slate-50 transition-all duration-300"
           >
             ← Voltar
           </button>
           <button 
             onClick={onShowRanking}
-            className="px-4 py-2 md:px-6 md:py-3 bg-[#FF4E6B] text-white font-black text-[10px] md:text-xs uppercase tracking-widest rounded-full shadow-lg border-2 md:border-4 border-white hover:bg-white hover:text-[#FF4E6B] hover:border-[#FF4E6B] transition-all duration-300 flex items-center gap-2"
+            className="flex-1 md:flex-none px-4 py-2 md:px-6 md:py-3 bg-[#FF4E6B] text-white font-black text-[10px] md:text-xs uppercase tracking-widest rounded-full shadow-lg border-2 md:border-4 border-white hover:bg-white hover:text-[#FF4E6B] hover:border-[#FF4E6B] transition-all duration-300 flex items-center justify-center gap-2"
           >
             <span className="text-sm md:text-base">🏆</span> RANKING
           </button>
@@ -51,7 +51,7 @@ const StageSelect: React.FC<StageSelectProps> = ({ unlockedIndex, onSelect, onBa
       </header>
 
       <div className="relative z-10 max-w-7xl mx-auto w-full flex-grow flex items-center justify-center min-h-0">
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 md:gap-4 w-full h-full md:h-auto items-center overflow-y-auto md:overflow-visible py-2 custom-scrollbar">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 md:gap-4 w-full h-full md:h-auto items-center overflow-y-auto md:overflow-visible px-2 py-4 custom-scrollbar">
           {BOSSES.map((boss, index) => {
             const isUnlocked = index <= unlockedIndex;
             const isCurrent = index === unlockedIndex;

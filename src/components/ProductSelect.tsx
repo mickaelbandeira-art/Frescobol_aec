@@ -24,23 +24,23 @@ const ProductSelect: React.FC<ProductSelectProps> = ({ onSelect, onBack }) => {
       </button>
 
       <div className="relative z-10 w-full max-w-5xl h-full flex flex-col justify-center py-4">
-        <div className="text-center mb-6 md:mb-8">
-          <div className="inline-block bg-white/95 px-6 py-4 md:px-10 md:py-6 rounded-[30px] md:rounded-[40px] border-4 md:border-8 border-[#3164F4] shadow-2xl transform -rotate-1">
-            <h2 className="text-3xl md:text-5xl font-black uppercase tracking-tighter leading-none text-[#3164F4]">
+        <div className="text-center mb-4 md:mb-8">
+          <div className="inline-block bg-white/95 px-5 py-3 md:px-10 md:py-6 rounded-[25px] md:rounded-[40px] border-4 md:border-8 border-[#3164F4] shadow-2xl transform -rotate-1">
+            <h2 className="text-2xl md:text-5xl font-black uppercase tracking-tighter leading-none text-[#3164F4]">
               Escolha seu <span className="text-[#FF4E6B]">Produto</span>
             </h2>
-            <p className="mt-2 text-slate-600 font-bold uppercase text-[10px] md:text-xs tracking-[0.2em]">
-              Selecione a campanha para iniciar sua jornada
+            <p className="mt-1 md:mt-2 text-slate-600 font-bold uppercase text-[8px] md:text-xs tracking-[0.2em]">
+              Selecione a campanha para iniciar
             </p>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-6 max-h-[60vh] overflow-y-auto custom-scrollbar px-2">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-6 max-h-[55vh] md:max-h-[60vh] overflow-y-auto custom-scrollbar px-2">
           {PRODUCTS.map((product) => (
             <button
               key={product.id}
               onClick={() => onSelect(product)}
-              className="group relative bg-white/95 rounded-[25px] md:rounded-[35px] p-4 md:p-6 shadow-lg border-2 border-transparent hover:border-[#3164F4] transition-all duration-300 hover:-translate-y-1 flex flex-col items-center justify-center gap-3 md:gap-4 overflow-hidden"
+              className="group relative bg-white/95 rounded-[20px] md:rounded-[35px] p-3 md:p-6 shadow-lg border-2 border-transparent hover:border-[#3164F4] transition-all duration-300 hover:-translate-y-1 flex flex-col items-center justify-center gap-2 md:gap-4 overflow-hidden"
             >
               <div 
                 className="absolute inset-x-0 bottom-0 h-1 transition-all duration-300 group-hover:h-full group-hover:opacity-10 opacity-0"
