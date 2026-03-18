@@ -44,8 +44,8 @@ const BALL_RADIUS = 10;
 const PADDLE_WIDTH = 40;
 const PADDLE_HEIGHT = 80;
 const PADDLE_RADIUS = 40;
-const INITIAL_BALL_SPEED = 3.5;
-const SPEED_INCREMENT = 0.08;
+const INITIAL_BALL_SPEED = 4.5;
+const SPEED_INCREMENT = 0.12;
 
 const GameCanvas: React.FC<GameCanvasProps> = ({ gameState, onGameOver, onBack }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -61,8 +61,14 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ gameState, onGameOver, onBack }
 
   // Adjusted difficulty based on boss
   const bossDifficulty = gameState.boss?.difficulty || 1;
-  const currentInitialSpeed = INITIAL_BALL_SPEED + (bossDifficulty * 0.5);
-  const currentSpeedIncrement = SPEED_INCREMENT + (bossDifficulty * 0.02);
+  const currentInitialSpeed = INITIAL_BALL_SPEED + (bossDifficulty * 0.8);
+  const currentSpeedIncrement = SPEED_INCREMENT + (bossDifficulty * 0.03);
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
 
   // Game state refs for persistent values across frames
   const ballRef = useRef({ x: CANVAS_WIDTH / 2, y: CANVAS_HEIGHT / 2, vx: currentInitialSpeed, vy: 2, scale: 1 });
@@ -194,7 +200,7 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ gameState, onGameOver, onBack }
       const winTarget = gameState.boss?.targetScore || 1000;
       if (score >= winTarget) {
         if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
-        onGameOver(score, aliveTime, 3);
+        onGameOver(score, aliveTime, lives); // Star count = lives remaining
         return;
       }
 
@@ -472,7 +478,23 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ gameState, onGameOver, onBack }
         });
       }
 
-      // Boss avatar — photo clipped in circle
+      // Boss avatar — photo clipped in circle (face/torso)
+      const drawAvatarHeader = (x: number, y: number, img: HTMLImageElement | null) => {
+        const r = 35;
+        ctx.save();
+        ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.clip();
+        if (img) {
+          // Crop from top (show face/torso)
+          const srcSize = img.naturalWidth;
+          ctx.drawImage(img, 0, 0, srcSize, srcSize, x - r, y - r, r * 2, r * 2);
+        } else {
+          ctx.fillStyle = '#1A2B3C'; ctx.fillRect(x - r, y - r, r * 2, r * 2);
+        }
+        ctx.restore();
+        ctx.strokeStyle = '#FFFFFF'; ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.stroke();
+      };
+
       const drawAvatar = (x: number, y: number, img: HTMLImageElement | null) => {
         const r = PADDLE_RADIUS * 1.2;
         ctx.save();
@@ -480,8 +502,7 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ gameState, onGameOver, onBack }
         ctx.beginPath(); ctx.ellipse(x + 12, y + 12, r, r * 0.4, 0, 0, Math.PI * 2); ctx.fill();
         ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.clip();
         if (img) {
-          // Crop from top (show face/torso, not full body)
-          const srcH = img.naturalWidth; // square crop from top
+          const srcH = img.naturalWidth;
           ctx.drawImage(img, 0, 0, img.naturalWidth, srcH, x - r, y - r, r * 2, r * 2);
         } else {
           ctx.fillStyle = '#1A2B3C'; ctx.fillRect(x - r, y - r, r * 2, r * 2);
@@ -531,28 +552,24 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ gameState, onGameOver, onBack }
       ctx.fillText(`PONTOS: ${score}`, canvas.width / 2, 60);
       
       const hudTarget = gameState.boss?.targetScore || 1000;
-      const progressBaseline = (gameState.currentStageIndex === 0) ? 0 : 0; // The progress should be relative to the stage total.
-      // Actually, if we use cumulative score, the bar should fill up towards the next target.
-      const previousTarget = gameState.currentStageIndex > 0 ? (gameState.boss?.targetScore || 1000) * 0.5 : 0; // Rough estimation or just 0
       const progress = Math.min(score / hudTarget, 1);
       
       ctx.fillStyle = 'rgba(255,255,255,0.2)'; ctx.fillRect(canvas.width / 2 - 200, 70, 400, 15);
       ctx.fillStyle = gameState.product?.color || '#FF4B2B'; ctx.fillRect(canvas.width / 2 - 200, 70, 400 * progress, 15);
-      ctx.fillStyle = '#FFFFFF'; ctx.font = '700 16px Inter'; ctx.fillText(`META DESTA FASE: ${hudTarget}`, canvas.width / 2, 110);
-
-      // TOTAL ACUMULADO is now just "score" if score starts at totalScore.
-      // To clarify, we can show "PONTOS DA SESSÃO" and "META FINAL".
+      ctx.fillStyle = '#FFFFFF'; ctx.font = '700 16px Inter'; 
+      ctx.fillText(`META DESTA FASE: ${hudTarget} | TEMPO: ${formatTime(time)}`, canvas.width / 2, 110);
 
       // BOSS & PRODUCT INFO (Moved to avoid overlap)
       ctx.textAlign = 'right'; ctx.font = '900 18px Inter'; ctx.fillStyle = '#FFFFFF';
-      ctx.fillText(gameState.boss?.name.toUpperCase() || 'BOSS', canvas.width - 150, 40);
+      ctx.fillText(gameState.boss?.name.toUpperCase() || 'BOSS', canvas.width - 100, 40);
       ctx.font = '700 12px Inter'; ctx.fillStyle = '#FF4E6B';
-      ctx.fillText(gameState.boss?.role.toUpperCase() || 'GESTOR', canvas.width - 150, 60);
+      ctx.fillText(gameState.boss?.role.toUpperCase() || 'GESTOR', canvas.width - 100, 60);
+      
+      // Draw Boss Headshot in HUD (top right)
+      drawAvatarHeader(canvas.width - 50, 50, imagesRef.current.opponent);
       
       ctx.textAlign = 'left'; ctx.font = '900 18px Inter'; ctx.fillStyle = '#FFFFFF';
-      ctx.fillText('PRODUTO:', 40, 40);
-      ctx.fillStyle = gameState.product?.color || '#FFFFFF';
-      ctx.fillText(gameState.product?.name.toUpperCase() || 'GERAL', 40, 65);
+      ctx.fillText(`${(gameState.product?.name || 'GERAL').toUpperCase()} | ${(gameState.user?.email?.split('@')[0] || 'PLAYER').toUpperCase()}`, 40, 65);
 
       // Lives
       for (let i = 0; i < lives; i++) {

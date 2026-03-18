@@ -54,6 +54,12 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ gameState, onRestart, onLogou
 
   const isWin = gameState.score >= (gameState.boss?.targetScore || 0);
 
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
   return (
     <div 
       className="min-h-screen bg-cover bg-center flex flex-col p-6 items-center justify-center relative overflow-hidden" 
@@ -84,7 +90,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ gameState, onRestart, onLogou
             <div className="w-px h-6 md:h-12 bg-[#3164F4]/20 hidden xs:block"></div>
             <div className="flex flex-col">
               <span className="text-[7px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest">Tempo</span>
-              <span className="text-lg md:text-3xl font-black text-slate-700">{gameState.timeElapsed}s</span>
+              <span className="text-lg md:text-3xl font-black text-slate-700">{formatTime(gameState.timeElapsed)}</span>
             </div>
             <div className="w-px h-6 md:h-12 bg-[#3164F4]/20 hidden xs:block"></div>
             <div className="flex flex-col items-center">
@@ -136,7 +142,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ gameState, onRestart, onLogou
                   </div>
                   <div className="flex flex-col items-end">
                     <span className="text-sm md:text-xl font-black text-[#3164F4]">{entry.score} <span className="text-[8px] md:text-[10px]">pts</span></span>
-                    <span className="text-[8px] md:text-[9px] text-slate-400 font-black uppercase">{entry.time}s</span>
+                    <span className="text-[8px] md:text-[9px] text-slate-400 font-black uppercase">{formatTime(entry.time)}</span>
                   </div>
                 </div>
               ))
