@@ -6,12 +6,14 @@ import StageSelect from './components/StageSelect';
 import GameCanvas from './components/GameCanvas';
 import Leaderboard from './components/Leaderboard';
 import StartScreen from './components/StartScreen';
-import { BOSSES } from './constants/gameData';
+import { BOSSES, PRODUCTS } from './constants/gameData';
 import { supabase } from './lib/supabaseClient';
 
 const App: React.FC = () => {
   const [currentScreen, setCurrentScreen] = useState<Screen>('START');
   const [user, setUser] = useState<User | null>(null);
+  const [showAdmin, setShowAdmin] = useState(false);
+  const [urlProduct, setUrlProduct] = useState<string | null>(null);
   const [gameState, setGameState] = useState<GameState>({
     player: null,
     boss: null,
@@ -73,6 +75,16 @@ const App: React.FC = () => {
       }
     };
 
+    const params = new URLSearchParams(window.location.search);
+    const p = params.get('p');
+    if (p) {
+      const product = PRODUCTS.find(prod => prod.id === p);
+      if (product) {
+        setGameState(prev => ({ ...prev, product }));
+        setUrlProduct(p);
+      }
+    }
+
     initSession();
   }, []);
 
@@ -87,7 +99,20 @@ const App: React.FC = () => {
   const handleLogin = async (userData: User) => {
     setUser(userData);
     localStorage.setItem('frescobol_user', JSON.stringify(userData));
-    setCurrentScreen('PRODUCT_SELECT');
+    
+    if (userData.product_id) {
+      const product = PRODUCTS.find(p => p.id === userData.product_id);
+      if (product) {
+        setGameState(prev => ({ ...prev, product }));
+        setCurrentScreen('STAGE_SELECT');
+      } else {
+        setCurrentScreen('PRODUCT_SELECT');
+      }
+    } else if (gameState.product) {
+      setCurrentScreen('STAGE_SELECT');
+    } else {
+      setCurrentScreen('PRODUCT_SELECT');
+    }
 
     // Sync with Supabase
     try {
@@ -95,7 +120,7 @@ const App: React.FC = () => {
         .from('profiles')
         .upsert({ 
           email: userData.email, 
-          matricula: userData.matricula,
+          matricula: userData.matricula || userData.product_id || 'CLIENT',
           name: userData.email.split('@')[0]
         }, { onConflict: 'matricula' })
         .select()
@@ -200,13 +225,18 @@ const App: React.FC = () => {
       {currentScreen === 'START' && <StartScreen onStart={handleStartGame} />}
       
       {currentScreen === 'LOGIN' && (
-        <LoginScreen onLogin={handleLogin} onBack={() => setCurrentScreen('START')} />
+        <LoginScreen 
+          onLogin={handleLogin} 
+          onBack={() => setCurrentScreen('START')} 
+          preSelectedProductId={urlProduct}
+        />
       )}
       
       {currentScreen === 'PRODUCT_SELECT' && (
         <ProductSelect 
           onSelect={handleProductSelect} 
           onBack={() => setCurrentScreen('START')} 
+          activeProductId={gameState.product?.id}
         />
       )}
       
@@ -243,6 +273,52 @@ const App: React.FC = () => {
           onRestart={handleRestart}
           onLogout={handleLogout}
         />
+      )}
+
+      {/* Admin Panel Entry - Hidden/Discreet */}
+      <button 
+        onClick={() => setShowAdmin(true)}
+        className="fixed bottom-2 right-2 w-8 h-8 rounded-full bg-white/5 hover:bg-white/20 transition-all flex items-center justify-center text-[10px] text-white/10 z-[100]"
+        title="Admin"
+      >
+        ⚙️
+      </button>
+
+      {/* Admin Modal */}
+      {showAdmin && (
+        <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="bg-white rounded-[30px] p-8 max-w-lg w-full shadow-2xl border-4 border-[#3164F4]">
+            <h2 className="text-3xl font-black text-[#3164F4] mb-6 uppercase tracking-tighter">Painel Administrativo</h2>
+            <div className="space-y-4">
+              {PRODUCTS.map(p => {
+                const url = `${window.location.origin}${window.location.pathname}?p=${p.id}`;
+                return (
+                  <div key={p.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border-2 border-slate-100">
+                    <div>
+                      <span className="font-black text-slate-800 uppercase block">{p.name}</span>
+                      <span className="text-[10px] text-slate-400 break-all">{url}</span>
+                    </div>
+                    <button 
+                      onClick={() => {
+                        navigator.clipboard.writeText(url);
+                        alert(`Link para ${p.name} copiado!`);
+                      }}
+                      className="ml-4 px-4 py-2 bg-[#3164F4] text-white text-[10px] font-black rounded-lg hover:bg-[#3164F4]/80 transition-all"
+                    >
+                      COPIAR
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+            <button 
+              onClick={() => setShowAdmin(false)}
+              className="mt-8 w-full py-4 bg-slate-200 text-slate-600 font-black rounded-2xl hover:bg-slate-300 transition-all uppercase tracking-widest text-sm"
+            >
+              Fechar
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -3,7 +3,8 @@ export type Screen = 'START' | 'LOGIN' | 'PRODUCT_SELECT' | 'STAGE_SELECT' | 'GA
 export interface User {
   id?: string;
   email: string;
-  matricula: string;
+  matricula?: string;
+  product_id?: string;
 }
 
 export interface Product {

@@ -5,9 +5,14 @@ import { PRODUCTS } from '../constants/gameData';
 interface ProductSelectProps {
   onSelect: (product: Product) => void;
   onBack: () => void;
+  activeProductId?: string;
 }
 
-const ProductSelect: React.FC<ProductSelectProps> = ({ onSelect, onBack }) => {
+const ProductSelect: React.FC<ProductSelectProps> = ({ onSelect, onBack, activeProductId }) => {
+  const filteredProducts = activeProductId 
+    ? PRODUCTS.filter(p => p.id === activeProductId) 
+    : PRODUCTS;
+
   return (
     <div 
       className="h-screen w-screen bg-cover bg-center flex items-center justify-center p-4 md:p-8 relative overflow-hidden"
@@ -36,7 +41,7 @@ const ProductSelect: React.FC<ProductSelectProps> = ({ onSelect, onBack }) => {
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 md:gap-6 max-h-[55vh] md:max-h-[60vh] overflow-y-auto custom-scrollbar px-2 py-2">
-          {PRODUCTS.map((product) => (
+          {filteredProducts.map((product) => (
             <button
               key={product.id}
               onClick={() => onSelect(product)}

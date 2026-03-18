@@ -1,14 +1,16 @@
 import React, { useState } from 'react';
 import { User } from '../types/game';
+import { PRODUCTS } from '../constants/gameData';
 
 interface LoginScreenProps {
   onLogin: (userData: User) => void;
   onBack: () => void;
+  preSelectedProductId?: string | null;
 }
 
-const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, onBack }) => {
-  const [email, setEmail] = useState('');
-  const [matricula, setMatricula] = useState('');
+const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, onBack, preSelectedProductId }) => {
+  const [name, setName] = useState('');
+  const [selectedProductId, setSelectedProductId] = useState(preSelectedProductId || '');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -17,7 +19,11 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, onBack }) => {
     
     // Mock authentication
     setTimeout(() => {
-      onLogin({ email, matricula });
+      onLogin({ 
+        email: `${name.toLowerCase().replace(/\s+/g, '.')}@aec.com.br`, 
+        product_id: selectedProductId,
+        matricula: selectedProductId // Use product as matricula for clients
+      });
       setIsSubmitting(false);
     }, 1000);
   };
@@ -47,31 +53,36 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, onBack }) => {
         <form onSubmit={handleSubmit} className="space-y-8">
           <div className="space-y-1 md:space-y-2">
             <label className="block text-[#3164F4] text-[9px] md:text-sm font-black uppercase tracking-widest px-2">
-              Email Corporativo
-            </label>
-            <input 
-              type="email" 
-              required
-              placeholder="seu.nome@aec.com.br"
-              className="w-full bg-slate-100 border-2 md:border-4 border-slate-200 p-3 md:p-5 rounded-xl md:rounded-2xl text-[#1A2B3C] text-sm md:text-lg font-bold focus:outline-none focus:border-[#3164F4] transition-all duration-300 placeholder:text-slate-400"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-          </div>
-
-          <div className="space-y-1 md:space-y-2">
-            <label className="block text-[#3164F4] text-[9px] md:text-sm font-black uppercase tracking-widest px-2">
-              Matrícula
+              Nome Completo
             </label>
             <input 
               type="text" 
               required
-              placeholder="Ex: 123456"
+              placeholder="Digite seu nome"
               className="w-full bg-slate-100 border-2 md:border-4 border-slate-200 p-3 md:p-5 rounded-xl md:rounded-2xl text-[#1A2B3C] text-sm md:text-lg font-bold focus:outline-none focus:border-[#3164F4] transition-all duration-300 placeholder:text-slate-400"
-              value={matricula}
-              onChange={(e) => setMatricula(e.target.value)}
+              value={name}
+              onChange={(e) => setName(e.target.value)}
             />
           </div>
+
+          {!preSelectedProductId && (
+            <div className="space-y-1 md:space-y-2">
+              <label className="block text-[#3164F4] text-[9px] md:text-sm font-black uppercase tracking-widest px-2">
+                Escolha seu Produto (Cliente)
+              </label>
+              <select 
+                required
+                className="w-full bg-slate-100 border-2 md:border-4 border-slate-200 p-3 md:p-5 rounded-xl md:rounded-2xl text-[#1A2B3C] text-sm md:text-lg font-bold focus:outline-none focus:border-[#3164F4] transition-all duration-300 appearance-none cursor-pointer"
+                value={selectedProductId}
+                onChange={(e) => setSelectedProductId(e.target.value)}
+              >
+                <option value="">Selecione um produto...</option>
+                {PRODUCTS.map(p => (
+                  <option key={p.id} value={p.id}>{p.name}</option>
+                ))}
+              </select>
+            </div>
+          )}
 
           <button 
             type="submit"
