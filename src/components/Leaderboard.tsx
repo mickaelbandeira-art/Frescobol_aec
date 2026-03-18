@@ -61,10 +61,10 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ gameState, onRestart, onLogou
     >
       <div className="absolute inset-0 bg-white/40 backdrop-blur-[4px]" />
 
-      <div className="relative z-10 max-w-4xl w-full bg-white/95 rounded-[30px] md:rounded-[40px] p-5 md:p-12 shadow-2xl border-4 md:border-8 border-[#3164F4]">
-        <header className="mb-6 md:mb-10 text-center">
-          <img src="/assets/logo_summer.png" alt="Logo" className="max-w-[150px] md:max-w-[200px] mx-auto mb-4" />
-          <h2 className="text-4xl md:text-6xl font-black text-[#FF4E6B] tracking-tighter uppercase leading-none mb-4 md:mb-6">
+      <div className="relative z-10 max-w-4xl w-full bg-white/95 rounded-[25px] md:rounded-[40px] p-4 md:p-12 shadow-2xl border-4 md:border-8 border-[#3164F4]">
+        <header className="mb-4 md:mb-10 text-center">
+          <img src="/assets/logo_summer.png" alt="Logo" className="max-w-[120px] md:max-w-[200px] mx-auto mb-3 md:mb-4" />
+          <h2 className="text-3xl md:text-6xl font-black text-[#FF4E6B] tracking-tighter uppercase leading-none mb-3 md:mb-6">
             {isWin ? (
               <>
                 <span className="text-[#3164F4]">VOCÊ</span> VENCEU!
@@ -76,22 +76,22 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ gameState, onRestart, onLogou
             )}
           </h2>
           
-          <div className="flex flex-wrap justify-center gap-4 md:gap-8 items-center bg-[#3164F4]/5 p-4 md:p-6 rounded-2xl md:rounded-3xl border-2 md:border-4 border-[#3164F4]">
+          <div className="flex flex-wrap justify-center gap-3 md:gap-8 items-center bg-[#3164F4]/5 p-3 md:p-6 rounded-xl md:rounded-3xl border-2 md:border-4 border-[#3164F4]">
             <div className="flex flex-col">
-              <span className="text-[8px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest">Score Final</span>
-              <span className="text-3xl md:text-5xl font-black text-[#3164F4]">{gameState.score}</span>
+              <span className="text-[7px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest">Score Final</span>
+              <span className="text-2xl md:text-5xl font-black text-[#3164F4]">{gameState.score}</span>
             </div>
-            <div className="w-px h-8 md:h-12 bg-[#3164F4]/20 hidden sm:block"></div>
+            <div className="w-px h-6 md:h-12 bg-[#3164F4]/20 hidden xs:block"></div>
             <div className="flex flex-col">
-              <span className="text-[8px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest">Tempo</span>
-              <span className="text-xl md:text-3xl font-black text-slate-700">{gameState.timeElapsed}s</span>
+              <span className="text-[7px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest">Tempo</span>
+              <span className="text-lg md:text-3xl font-black text-slate-700">{gameState.timeElapsed}s</span>
             </div>
-            <div className="w-px h-8 md:h-12 bg-[#3164F4]/20 hidden sm:block"></div>
+            <div className="w-px h-6 md:h-12 bg-[#3164F4]/20 hidden xs:block"></div>
             <div className="flex flex-col items-center">
-              <span className="text-[8px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest">Estrelas</span>
-              <div className="flex gap-1 md:gap-2 pt-1 md:pt-2">
+              <span className="text-[7px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest">Estrelas</span>
+              <div className="flex gap-1 md:gap-2 pt-1">
                 {[...Array(3)].map((_, i) => (
-                  <span key={i} className={`text-xl md:text-2xl ${i < gameState.stars ? 'grayscale-0 animate-bounce' : 'grayscale opacity-30'}`} style={{ animationDelay: `${i * 0.2}s` }}>
+                  <span key={i} className={`text-lg md:text-2xl ${i < gameState.stars ? 'grayscale-0 animate-bounce' : 'grayscale opacity-30'}`} style={{ animationDelay: `${i * 0.2}s` }}>
                     ⭐
                   </span>
                 ))}
@@ -115,7 +115,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ gameState, onRestart, onLogou
               rankings.map((entry, index) => (
                 <div 
                   key={index} 
-                  className={`flex justify-between items-center p-3 md:p-4 rounded-xl md:rounded-2xl border-2 md:border-4 transition-all ${
+                  className={`flex justify-between items-center p-2.5 md:p-4 rounded-xl md:rounded-2xl border-2 md:border-4 transition-all ${
                     entry.name === gameState.player?.name ? 'border-[#FF4E6B] bg-[#FF4E6B]/5' : 'border-slate-100 bg-white'
                   }`}
                 >
@@ -148,17 +148,17 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ gameState, onRestart, onLogou
           </div>
         </section>
 
-        <footer className="flex flex-col md:flex-row gap-3 md:gap-4">
+        <footer className="flex flex-col sm:flex-row gap-3 md:gap-4">
           <button 
             onClick={onRestart}
-            className="flex-1 bg-gradient-to-r from-[#FF4E6B] to-[#FF6B6B] text-white font-black text-lg md:text-xl py-4 md:py-5 rounded-xl md:rounded-2xl shadow-[0_6px_0_0_#D13450] md:shadow-[0_8px_0_0_#D13450] hover:translate-y-1 hover:shadow-[0_3px_0_0_#D13450] active:translate-y-2 active:shadow-none transition-all duration-150 uppercase tracking-widest flex items-center justify-center gap-3"
+            className="flex-1 bg-gradient-to-r from-[#FF4E6B] to-[#FF6B6B] text-white font-black text-base md:text-xl py-3.5 md:py-5 rounded-xl md:rounded-2xl shadow-[0_5px_0_0_#D13450] md:shadow-[0_8px_0_0_#D13450] hover:translate-y-1 hover:shadow-[0_2px_0_0_#D13450] active:translate-y-2 active:shadow-none transition-all duration-150 uppercase tracking-widest flex items-center justify-center gap-2 md:gap-3"
           >
             <span className="text-xl md:text-2xl">{isWin ? '🏆' : '🔄'}</span>
             {isWin ? 'ADIANTE' : 'RECOBRAR'}
           </button>
           <button 
             onClick={onLogout}
-            className="px-6 md:px-10 bg-white border-2 md:border-4 border-[#3164F4] text-[#3164F4] font-black text-sm md:text-lg py-4 md:py-5 rounded-xl md:rounded-2xl shadow-[0_6px_0_0_#1E40AF] md:shadow-[0_8px_0_0_#1E40AF] hover:translate-y-1 hover:shadow-[0_3px_0_0_#1E40AF] active:translate-y-2 active:shadow-none transition-all duration-150 uppercase tracking-widest flex items-center justify-center gap-3"
+            className="px-6 md:px-10 bg-white border-2 md:border-4 border-[#3164F4] text-[#3164F4] font-black text-xs md:text-lg py-3.5 md:py-5 rounded-xl md:rounded-2xl shadow-[0_5px_0_0_#1E40AF] md:shadow-[0_8px_0_0_#1E40AF] hover:translate-y-1 hover:shadow-[0_2px_0_0_#1E40AF] active:translate-y-2 active:shadow-none transition-all duration-150 uppercase tracking-widest flex items-center justify-center gap-2 md:gap-3"
           >
             SAIR
           </button>

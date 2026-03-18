@@ -16,35 +16,35 @@ const StartScreen: React.FC<StartScreenProps> = ({ onStart }) => {
       <div className="absolute inset-0 bg-sky-400/10 pointer-events-none" />
 
       {/* Logo Section */}
-      <div className="z-10 mb-12 animate-float">
+      <div className="z-10 mb-8 md:mb-12 animate-float px-4">
         <img 
           src="/assets/logo_summer.png" 
           alt="Game Summer" 
-          className="max-w-[400px] md:max-w-[600px] drop-shadow-2xl"
+          className="max-w-[280px] md:max-w-[600px] drop-shadow-2xl mx-auto"
         />
       </div>
 
       {/* Buttons Section */}
-      <div className="z-10 flex flex-col md:flex-row gap-6">
+      <div className="z-10 flex flex-col md:flex-row gap-4 md:gap-6 w-full max-w-[280px] md:max-w-none">
         <button
           onClick={onStart}
-          className="group relative flex items-center justify-center gap-3 px-12 py-5 bg-gradient-to-r from-[#FF4E6B] to-[#FF6B6B] text-white font-black text-2xl rounded-full shadow-[0_10px_0_0_#D13450] hover:translate-y-1 hover:shadow-[0_6px_0_0_#D13450] active:translate-y-2 active:shadow-none transition-all duration-150 uppercase tracking-widest"
+          className="group relative flex items-center justify-center gap-2 md:gap-3 px-8 py-3.5 md:px-12 md:py-5 bg-gradient-to-r from-[#FF4E6B] to-[#FF6B6B] text-white font-black text-lg md:text-2xl rounded-full shadow-[0_6px_0_0_#D13450] md:shadow-[0_10px_0_0_#D13450] hover:translate-y-1 hover:shadow-[0_4px_0_0_#D13450] active:translate-y-2 active:shadow-none transition-all duration-150 uppercase tracking-widest"
         >
-          <span className="text-3xl">🎮</span>
+          <span className="text-2xl md:text-3xl">🎮</span>
           JOGAR
         </button>
 
         <button
           onClick={() => setShowHowToPlay(true)}
-          className="group relative flex items-center justify-center gap-3 px-10 py-5 bg-gradient-to-r from-[#3164F4] to-[#4B7DFF] text-white font-black text-2xl rounded-full shadow-[0_10px_0_0_#1E40AF] hover:translate-y-1 hover:shadow-[0_6px_0_0_#1E40AF] active:translate-y-2 active:shadow-none transition-all duration-150 uppercase tracking-widest"
+          className="group relative flex items-center justify-center gap-2 md:gap-3 px-8 py-3.5 md:px-10 md:py-5 bg-gradient-to-r from-[#3164F4] to-[#4B7DFF] text-white font-black text-lg md:text-2xl rounded-full shadow-[0_6px_0_0_#1E40AF] md:shadow-[0_10px_0_0_#1E40AF] hover:translate-y-1 hover:shadow-[0_4px_0_0_#1E40AF] active:translate-y-2 active:shadow-none transition-all duration-150 uppercase tracking-widest"
         >
-          <span className="text-3xl">❓</span>
+          <span className="text-2xl md:text-3xl">❓</span>
           COMO JOGAR
         </button>
       </div>
 
       {/* Footer Info */}
-      <div className="absolute bottom-6 z-10 text-white/90 font-bold bg-black/20 px-6 py-2 rounded-full backdrop-blur-sm transition-all hover:bg-black/40">
+      <div className="absolute bottom-4 md:bottom-6 z-10 text-[9px] md:text-xs text-white/90 font-bold bg-black/20 px-4 py-1.5 md:px-6 md:py-2 rounded-full backdrop-blur-sm transition-all hover:bg-black/40">
         Desenvolvido por Mickael Bandeira | Analista de Conteúdo
       </div>
 

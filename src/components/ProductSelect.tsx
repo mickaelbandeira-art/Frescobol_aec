@@ -24,35 +24,35 @@ const ProductSelect: React.FC<ProductSelectProps> = ({ onSelect, onBack }) => {
       </button>
 
       <div className="relative z-10 w-full max-w-5xl h-full flex flex-col justify-center py-4">
-        <div className="text-center mb-4 md:mb-8">
-          <div className="inline-block bg-white/95 px-5 py-3 md:px-10 md:py-6 rounded-[25px] md:rounded-[40px] border-4 md:border-8 border-[#3164F4] shadow-2xl transform -rotate-1">
-            <h2 className="text-2xl md:text-5xl font-black uppercase tracking-tighter leading-none text-[#3164F4]">
+        <div className="text-center mb-3 md:mb-8 transition-all">
+          <div className="inline-block bg-white/95 px-4 py-2.5 md:px-10 md:py-6 rounded-[20px] md:rounded-[40px] border-[3px] md:border-8 border-[#3164F4] shadow-2xl transform -rotate-1">
+            <h2 className="text-xl md:text-5xl font-black uppercase tracking-tighter leading-none text-[#3164F4]">
               Escolha seu <span className="text-[#FF4E6B]">Produto</span>
             </h2>
-            <p className="mt-1 md:mt-2 text-slate-600 font-bold uppercase text-[8px] md:text-xs tracking-[0.2em]">
+            <p className="mt-0.5 md:mt-2 text-slate-600 font-bold uppercase text-[7px] md:text-xs tracking-[0.15em] md:tracking-[0.2em]">
               Selecione a campanha para iniciar
             </p>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-6 max-h-[55vh] md:max-h-[60vh] overflow-y-auto custom-scrollbar px-2">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 md:gap-6 max-h-[55vh] md:max-h-[60vh] overflow-y-auto custom-scrollbar px-2 py-2">
           {PRODUCTS.map((product) => (
             <button
               key={product.id}
               onClick={() => onSelect(product)}
-              className="group relative bg-white/95 rounded-[20px] md:rounded-[35px] p-3 md:p-6 shadow-lg border-2 border-transparent hover:border-[#3164F4] transition-all duration-300 hover:-translate-y-1 flex flex-col items-center justify-center gap-2 md:gap-4 overflow-hidden"
+              className="group relative bg-white/95 rounded-[15px] md:rounded-[35px] p-2.5 md:p-6 shadow-lg border-2 border-transparent hover:border-[#3164F4] transition-all duration-300 hover:-translate-y-1 flex flex-col items-center justify-center gap-1.5 md:gap-4 overflow-hidden"
             >
               <div 
                 className="absolute inset-x-0 bottom-0 h-1 transition-all duration-300 group-hover:h-full group-hover:opacity-10 opacity-0"
                 style={{ backgroundColor: product.color }}
               />
               
-              <div className="relative z-10 w-16 h-16 md:w-24 md:h-24 rounded-full bg-slate-50 flex items-center justify-center p-2 shadow-inner group-hover:scale-110 transition-transform duration-300 border border-slate-100">
+              <div className="relative z-10 w-12 h-12 md:w-24 md:h-24 rounded-full bg-slate-50 flex items-center justify-center p-1.5 md:p-2 shadow-inner group-hover:scale-110 transition-transform duration-300 border border-slate-100">
                 {product.logo ? (
                   <img 
                     src={product.logo} 
                     alt={product.name} 
-                    className="w-full h-full object-contain p-2 drop-shadow-sm" 
+                    className="w-full h-full object-contain p-1 md:p-2 drop-shadow-sm" 
                   />
                 ) : (
                   <span className="text-2xl md:text-4xl font-black" style={{ color: product.color }}>
@@ -62,7 +62,7 @@ const ProductSelect: React.FC<ProductSelectProps> = ({ onSelect, onBack }) => {
               </div>
               
               <div className="relative z-10 text-center">
-                <h3 className="text-lg md:text-xl font-black uppercase tracking-tighter text-slate-800 transition-colors group-hover:text-[#3164F4]">
+                <h3 className="text-sm md:text-xl font-black uppercase tracking-tighter text-slate-800 transition-colors group-hover:text-[#3164F4]">
                   {product.name}
                 </h3>
                 <div 
@@ -74,8 +74,8 @@ const ProductSelect: React.FC<ProductSelectProps> = ({ onSelect, onBack }) => {
           ))}
         </div>
 
-        <div className="mt-8 md:mt-10 text-center">
-          <p className="text-white/90 font-black text-[9px] md:text-[10px] uppercase tracking-widest bg-black/40 backdrop-blur-md inline-block px-6 py-2 rounded-full border border-white/20">
+        <div className="mt-4 md:mt-10 text-center">
+          <p className="text-white/90 font-black text-[7px] md:text-[10px] uppercase tracking-widest bg-black/40 backdrop-blur-md inline-block px-4 py-1.5 md:px-6 md:py-2 rounded-full border border-white/20">
             Enfrente a hierarquia AeC em cada produto selecionado
           </p>
         </div>
