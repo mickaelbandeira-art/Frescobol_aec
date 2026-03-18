@@ -569,7 +569,7 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ gameState, onGameOver, onBack }
       drawAvatarHeader(canvas.width - 50, 50, imagesRef.current.opponent);
       
       ctx.textAlign = 'left'; ctx.font = '900 18px Inter'; ctx.fillStyle = '#FFFFFF';
-      ctx.fillText(`${(gameState.product?.name || 'GERAL').toUpperCase()} | ${(gameState.user?.email?.split('@')[0] || 'PLAYER').toUpperCase()}`, 40, 65);
+      ctx.fillText(`${(gameState.product?.name || 'GERAL').toUpperCase()} | ${(gameState.player?.name || 'PLAYER').toUpperCase()}`, 40, 65);
 
       // Lives
       for (let i = 0; i < lives; i++) {
