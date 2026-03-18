@@ -14,7 +14,7 @@ export const BOSSES: Boss[] = [
     id: 'izaura', 
     name: 'Izaura Araújo', 
     role: 'Coordenadora', 
-    avatar: '/assets/hierarchy/izaura.png',
+    avatar: '/assets/hierarchy/5 Izaura Araújo.png',
     targetScore: 500,
     difficulty: 1
   },
@@ -22,7 +22,7 @@ export const BOSSES: Boss[] = [
     id: 'kelciane', 
     name: 'Kelciane Cavalcante', 
     role: 'Coordenadora', 
-    avatar: '/assets/hierarchy/kelciane.png',
+    avatar: '/assets/hierarchy/4 Kelciane Cavalcante.png',
     targetScore: 1000,
     difficulty: 2
   },
@@ -30,7 +30,7 @@ export const BOSSES: Boss[] = [
     id: 'jonathan', 
     name: 'Jonathan Lins', 
     role: 'Gerente', 
-    avatar: '/assets/hierarchy/jonathan.png',
+    avatar: '/assets/hierarchy/1 Jonathan Lins.png',
     targetScore: 2000,
     difficulty: 3
   },
@@ -38,7 +38,7 @@ export const BOSSES: Boss[] = [
     id: 'cleiton', 
     name: 'Cleiton Pinto', 
     role: 'Superintendente', 
-    avatar: '/assets/hierarchy/cleiton.png',
+    avatar: '/assets/hierarchy/3 Cleiton Pinto.png',
     targetScore: 3500,
     difficulty: 4
   },
@@ -46,7 +46,7 @@ export const BOSSES: Boss[] = [
     id: 'patricia', 
     name: 'Patrícia Oliveira', 
     role: 'Diretora', 
-    avatar: '/assets/hierarchy/patricia.png',
+    avatar: '/assets/hierarchy/2 Patrícia Oliveira.png',
     targetScore: 5000,
     difficulty: 5
   },
