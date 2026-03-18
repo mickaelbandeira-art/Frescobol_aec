@@ -40,7 +40,7 @@ const ProductSelect: React.FC<ProductSelectProps> = ({ onSelect, onBack, activeP
           </div>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 md:gap-6 max-h-[55vh] md:max-h-[60vh] overflow-y-auto custom-scrollbar px-2 py-2">
+        <div className={`grid ${filteredProducts.length === 1 ? 'grid-cols-1 place-items-center' : 'grid-cols-2 sm:grid-cols-3'} gap-2.5 md:gap-6 max-h-[55vh] md:max-h-[60vh] overflow-y-auto custom-scrollbar px-2 py-2`}>
           {filteredProducts.map((product) => (
             <button
               key={product.id}

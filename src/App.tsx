@@ -104,15 +104,9 @@ const App: React.FC = () => {
       const product = PRODUCTS.find(p => p.id === userData.product_id);
       if (product) {
         setGameState(prev => ({ ...prev, product }));
-        setCurrentScreen('STAGE_SELECT');
-      } else {
-        setCurrentScreen('PRODUCT_SELECT');
       }
-    } else if (gameState.product) {
-      setCurrentScreen('STAGE_SELECT');
-    } else {
-      setCurrentScreen('PRODUCT_SELECT');
     }
+    setCurrentScreen('PRODUCT_SELECT');
 
     // Sync with Supabase
     try {
