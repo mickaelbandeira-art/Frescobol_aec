@@ -21,6 +21,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ gameState, onRestart, onLogou
             score,
             stars,
             time_elapsed,
+            stage_index,
             created_at,
             product_id,
             profiles (
@@ -38,6 +39,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ gameState, onRestart, onLogou
           score: item.score,
           stars: item.stars,
           time: item.time_elapsed,
+          stage: item.stage_index || 0,
           date: new Date(item.created_at).toISOString().split('T')[0]
         }));
 
@@ -142,7 +144,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ gameState, onRestart, onLogou
                   </div>
                   <div className="flex flex-col items-end">
                     <span className="text-sm md:text-xl font-black text-[#3164F4]">{entry.score} <span className="text-[8px] md:text-[10px]">pts</span></span>
-                    <span className="text-[8px] md:text-[9px] text-slate-400 font-black uppercase">{formatTime(entry.time)}</span>
+                    <span className="text-[8px] md:text-[9px] text-slate-400 font-black uppercase">Nível {entry.stage + 1} | {formatTime(entry.time)}</span>
                   </div>
                 </div>
               ))

@@ -43,5 +43,6 @@ export interface LeaderboardEntry {
   score: number;
   stars: number;
   time: number;
+  stage: number;
   date: string;
 }

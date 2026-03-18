@@ -157,17 +157,21 @@ const App: React.FC = () => {
       stars: finalStars
     }));
 
-    // Save to Supabase rankings
+    // Update/Upsert to Supabase rankings (One record per user & product)
     if (user?.id) {
       try {
         const { error } = await supabase
           .from('rankings')
-          .insert({
+          .upsert({
             user_id: user.id,
             product_id: gameState.product?.id || 'unknown',
             score: finalScore,
             stars: finalStars,
-            time_elapsed: finalTime
+            time_elapsed: finalTime,
+            stage_index: gameState.currentStageIndex
+          }, { 
+            onConflict: 'user_id,product_id',
+            ignoreDuplicates: false 
           });
         
         if (error) console.error('Error saving ranking:', error);
