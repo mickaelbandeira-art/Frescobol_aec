@@ -6,6 +6,7 @@ import StageSelect from './components/StageSelect';
 import GameCanvas from './components/GameCanvas';
 import Leaderboard from './components/Leaderboard';
 import StartScreen from './components/StartScreen';
+import WelcomeModal from './components/WelcomeModal';
 import { BOSSES, PRODUCTS } from './constants/gameData';
 import { supabase } from './lib/supabaseClient';
 
@@ -13,6 +14,7 @@ const App: React.FC = () => {
   const [currentScreen, setCurrentScreen] = useState<Screen>('START');
   const [user, setUser] = useState<User | null>(null);
   const [showAdmin, setShowAdmin] = useState(false);
+  const [showWelcome, setShowWelcome] = useState(false);
   const [urlProduct, setUrlProduct] = useState<string | null>(null);
   const [gameState, setGameState] = useState<GameState>({
     player: null,
@@ -26,42 +28,18 @@ const App: React.FC = () => {
     lives: 3,
     timeElapsed: 0,
     stars: 0,
-    totalScore: 0
+    totalScore: 0,
+    lastStageTime: 0
   });
 
   useEffect(() => {
     const initSession = async () => {
       const savedUser = localStorage.getItem('frescobol_user');
       if (savedUser) {
-        const userData = JSON.parse(savedUser) as User;
+        const userData = JSON.parse(savedUser);
         setUser(userData);
-        
-        // Sync/Fetch UUID from Supabase if missing
-        try {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('id')
-            .eq('matricula', userData.matricula)
-            .single();
-          
-          if (profile) {
-            setUser({ ...userData, id: profile.id });
-          } else {
-            // Re-sync if profile somehow missing
-            const { data: newProfile } = await supabase
-              .from('profiles')
-              .upsert({ 
-                email: userData.email, 
-                matricula: userData.matricula,
-                name: userData.email.split('@')[0]
-              }, { onConflict: 'matricula' })
-              .select()
-              .single();
-            if (newProfile) setUser({ ...userData, id: newProfile.id });
-          }
-        } catch (err) {
-          console.error('Session sync error:', err);
-        }
+        // Important: Re-sync profile to get the most recent DB ID
+        await syncProfile(userData);
       }
 
       const savedProgression = localStorage.getItem('frescobol_unlocked_stage');
@@ -72,6 +50,14 @@ const App: React.FC = () => {
       const savedHighScore = localStorage.getItem('frescobol_high_score');
       if (savedHighScore) {
         setGameState(prev => ({ ...prev, highScore: parseInt(savedHighScore) }));
+      }
+
+      const savedProduct = localStorage.getItem('frescobol_product');
+      if (savedProduct && !urlProduct) {
+        const product = PRODUCTS.find(p => p.id === savedProduct);
+        if (product) {
+          setGameState(prev => ({ ...prev, product }));
+        }
       }
     };
 
@@ -88,129 +74,245 @@ const App: React.FC = () => {
     initSession();
   }, []);
 
-  const handleStartGame = () => {
+  const handleStartGame = React.useCallback(() => {
     if (user) {
-      setCurrentScreen('PRODUCT_SELECT');
+      if (gameState.product) {
+        setCurrentScreen('STAGE_SELECT');
+      } else {
+        setCurrentScreen('PRODUCT_SELECT');
+      }
     } else {
       setCurrentScreen('LOGIN');
     }
-  };
+  }, [user, gameState.product]);
 
-  const handleLogin = async (userData: User) => {
-    setUser(userData);
-    localStorage.setItem('frescobol_user', JSON.stringify(userData));
-    
-    if (userData.product_id) {
-      const product = PRODUCTS.find(p => p.id === userData.product_id);
-      if (product) {
-        setGameState(prev => ({ ...prev, product }));
-      }
-    }
-    setCurrentScreen('PRODUCT_SELECT');
-
-    // Sync with Supabase
+  const syncProfile = async (userData: User) => {
     try {
-      const { data: profile, error } = await supabase
+      console.log('Syncing profile for:', userData.email);
+        const { data: profile, error } = await supabase
         .from('profiles')
         .upsert({ 
           email: userData.email, 
           matricula: userData.matricula || userData.product_id || 'CLIENT',
-          name: userData.email.split('@')[0]
-        }, { onConflict: 'matricula' })
+          name: userData.email.split('@')[0],
+          type: userData.type || 'cliente'
+        }, { onConflict: 'email' })
         .select()
         .single();
 
-      if (error) console.error('Error syncing profile:', error);
-      if (profile) {
-        setUser({ ...userData, id: profile.id });
+      if (error) {
+        console.error('Error syncing profile:', error);
+      } else if (profile) {
+        console.log('Profile synced successfully:', profile.id);
+        setUser(prev => prev ? { ...prev, id: profile.id } : { ...userData, id: profile.id });
+
+        // IMPORTANT: Restore progression from DB
+        const { data: rankData } = await supabase
+          .from('rankings')
+          .select('stage_index, score')
+          .eq('user_id', profile.id) // Corrected to user_id
+          .maybeSingle(); // Better for cases where it might not exist
+        
+        if (rankData) {
+          setGameState(prev => ({ 
+            ...prev, 
+            unlockedStageIndex: rankData.stage_index || 0,
+            totalScore: rankData.score || 0
+          }));
+        } else {
+          // Explicit reset for new users without rankings yet
+          setGameState(prev => ({ 
+            ...prev, 
+            unlockedStageIndex: 0, // Start at 0 (first stage)
+            totalScore: 0 
+          }));
+        }
+
+        return profile.id;
       }
     } catch (err) {
       console.error('Failed to sync with Supabase:', err);
     }
+    return null;
   };
 
-  const handleProductSelect = (product: Product) => {
-    setGameState(prev => ({ ...prev, product }));
+  const handleLogin = React.useCallback(async (userData: User) => {
+    // Show welcome modal immediately for better responsiveness
+    setShowWelcome(true);
+    
+    setUser(userData);
+    localStorage.setItem('frescobol_user', JSON.stringify(userData));
+    
+    if (userData.product_id) {
+      const productData = PRODUCTS.find(p => p.id === userData.product_id);
+      if (productData) {
+        setGameState(prev => ({ 
+          ...prev, 
+          product: productData,
+          unlockedStageIndex: 0, // Reset for new login
+          totalScore: 0,
+          score: 0,
+          lastStageTime: 0
+        }));
+      }
+    }
+
+    // Routing based on type
+    if (userData.type === 'colaborador') {
+      setCurrentScreen('PRODUCT_SELECT');
+    } else {
+      // For clients, if they selected a product, go to hierarchy
+      if (userData.product_id) {
+        setCurrentScreen('STAGE_SELECT');
+      } else {
+        setCurrentScreen('PRODUCT_SELECT');
+      }
+    }
+
+    // Sync with Supabase (which also restores progression)
+    await syncProfile(userData);
+  }, []);
+
+  const handleProductSelect = React.useCallback((product: Product) => {
+    localStorage.setItem('frescobol_product', product.id);
+    setGameState(prev => ({ 
+      ...prev, 
+      product,
+      totalScore: 0,
+      score: 0
+    }));
     setCurrentScreen('STAGE_SELECT');
-  };
+  }, []);
 
-  const handleStageSelect = (stageIndex: number) => {
+  const handleRestart = React.useCallback(() => {
+    // Full reset for a brand new run
+    setGameState(prev => ({
+      ...prev,
+      score: 0,
+      totalScore: 0,
+      stars: 0,
+      lives: 3,
+      timeElapsed: 0
+      // unlockedStageIndex removed from reset to preserve progression
+    }));
+    setCurrentScreen('STAGE_SELECT');
+  }, []);
+
+  const handleNextStage = React.useCallback(() => {
+    // Preserve totalScore (cumulative time) and move to stage select
+    setCurrentScreen('STAGE_SELECT');
+  }, []);
+
+  const handleStageSelect = React.useCallback((stageIndex: number) => {
     const boss = BOSSES[stageIndex];
     setGameState(prev => ({ 
       ...prev, 
       boss,
       currentStageIndex: stageIndex,
-      player: { name: user?.email.split('@')[0] || 'Player', avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.matricula}` },
+      player: { 
+        name: user?.email?.split('@')[0] || 'Player', 
+        avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.matricula || 'default'}` 
+      },
       score: 0, 
-      rally: 0, 
-      lives: 3, 
-      timeElapsed: 0, 
-      stars: 0 
+      rally: 0,
+      // DEFINTIVE FIX: If starting stage 0, reset cumulative totals
+      totalScore: stageIndex === 0 ? 0 : prev.totalScore,
+      lastStageTime: stageIndex === 0 ? 0 : prev.lastStageTime,
+      stars: 0
     }));
     setCurrentScreen('GAME');
-  };
+  }, [user]);
 
-  const handleGameOver = async (finalScore: number, finalTime: number, finalStars: number) => {
-    const isWin = finalScore >= (gameState.boss?.targetScore || 0);
+  const handleGameOver = React.useCallback(async (playerPoints: number, opponentPoints: number, time: number) => {
+    const isWin = playerPoints >= 2;
+    const isPerfectWin = playerPoints === 2 && opponentPoints === 0;
+
+    // FETCH LATEST SCORE FROM DB TO PREVENT LATENCY/STALE STATE ISSUES
+    let currentDBScore = 0;
+    if (user?.id) {
+      const { data: rankEntry } = await supabase
+        .from('rankings')
+        .select('score')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      if (rankEntry) currentDBScore = rankEntry.score || 0;
+    }
+
+    const nextTotalScore = isWin 
+      ? (gameState.currentStageIndex === 0 ? time : (currentDBScore + time)) 
+      : (currentDBScore || gameState.totalScore);
     
-    if (isWin && gameState.currentStageIndex === gameState.unlockedStageIndex) {
-        const nextStage = gameState.unlockedStageIndex + 1;
-        if (nextStage < BOSSES.length) {
-            setGameState(prev => ({ ...prev, unlockedStageIndex: nextStage }));
-            localStorage.setItem('frescobol_unlocked_stage', nextStage.toString());
-        }
+    let nextLives = gameState.lives;
+    if (isWin && isPerfectWin) {
+      nextLives = Math.min(gameState.lives + 1, 5); 
+    } else if (!isWin) {
+      nextLives = Math.max(gameState.lives - 1, 0);
     }
 
-    // Update state
-    const newHighScore = finalScore > gameState.highScore ? finalScore : gameState.highScore;
-    if (finalScore > gameState.highScore) {
-      localStorage.setItem('frescobol_high_score', finalScore.toString());
-    }
+    const nextUnlockedIndex = isWin ? Math.max(gameState.unlockedStageIndex, gameState.currentStageIndex + 1) : gameState.unlockedStageIndex;
 
-    setGameState(prev => ({ 
-      ...prev, 
-      highScore: newHighScore, 
-      score: finalScore,
-      totalScore: finalScore,
-      timeElapsed: finalTime,
-      stars: finalStars
+    setGameState(prev => ({
+      ...prev,
+      lastStageTime: time,
+      totalScore: nextTotalScore,
+      unlockedStageIndex: nextUnlockedIndex,
+      score: nextTotalScore, 
+      stars: isWin ? (isPerfectWin ? 3 : 2) : 0,
+      lives: nextLives,
+      highScore: isWin && (prev.highScore === 0 || nextTotalScore < prev.highScore) ? nextTotalScore : prev.highScore,
+      timeElapsed: nextTotalScore
     }));
 
-    // Update/Upsert to Supabase rankings (One record per user & product)
-    if (user?.id) {
+    // Handle side effects
+    if (isWin) {
+      localStorage.setItem('frescobol_unlocked_stage', (gameState.currentStageIndex + 1).toString());
+    }
+
+    // 3. Database Upsert
+    let currentUserId = user?.id;
+    if (!currentUserId && user) {
+        currentUserId = await syncProfile(user);
+    }
+
+    if (currentUserId && isWin && nextTotalScore > 0) {
       try {
-        const { error } = await supabase
-          .from('rankings')
-          .upsert({
-            user_id: user.id,
-            product_id: gameState.product?.id || 'unknown',
-            score: finalScore,
-            stars: finalStars,
-            time_elapsed: finalTime,
-            stage_index: gameState.currentStageIndex
-          }, { 
-            onConflict: 'user_id,product_id',
-            ignoreDuplicates: false 
-          });
-        
-        if (error) console.error('Error saving ranking:', error);
+        await supabase
+            .from('rankings')
+            .upsert({
+                user_id: currentUserId, // Corrected to user_id
+                product_id: gameState.product?.id || 'GERAL',
+                score: nextTotalScore, 
+                stars: isPerfectWin ? 3 : 2,
+                time_elapsed: nextTotalScore,
+                stage_index: Math.max(gameState.unlockedStageIndex, gameState.currentStageIndex + 1)
+            }, { onConflict: 'user_id,product_id' }); // Corrected to user_id
       } catch (err) {
-        console.error('Failed to save ranking to Supabase:', err);
+        console.error('Failed to save ranking:', err);
       }
     }
 
-    setCurrentScreen('GAME_OVER');
-  };
-
-  const handleRestart = () => {
-    setCurrentScreen('STAGE_SELECT');
-  };
+    // 4. Transition or Game Over
+    if (nextLives === 0 && !isWin) {
+      alert('SUAS VIDAS ACABARAM! Tente novamente do início.');
+      handleRestart();
+    } else {
+      setCurrentScreen('GAME_OVER');
+    }
+  }, [user, gameState, handleRestart, syncProfile]);
 
   const handleLogout = () => {
     localStorage.removeItem('frescobol_user');
+    localStorage.removeItem('frescobol_product');
     localStorage.removeItem('frescobol_unlocked_stage');
     setUser(null);
-    setGameState(prev => ({ ...prev, unlockedStageIndex: 0 }));
+    setGameState(prev => ({ 
+      ...prev, 
+      unlockedStageIndex: 0,
+      totalScore: 0,
+      score: 0,
+      rally: 0,
+      lives: 3
+    }));
     setCurrentScreen('LOGIN');
   };
 
@@ -248,8 +350,15 @@ const App: React.FC = () => {
       {currentScreen === 'LEADERBOARD' && (
         <Leaderboard 
           gameState={gameState} 
-          onRestart={() => setCurrentScreen('STAGE_SELECT')}
+          onRestart={() => setCurrentScreen('STAGE_SELECT')} 
           onLogout={handleLogout}
+        />
+      )}
+
+      {showWelcome && user && (
+        <WelcomeModal 
+          userName={user.email.split('@')[0]} 
+          onClose={() => setShowWelcome(false)} 
         />
       )}
       
@@ -264,8 +373,8 @@ const App: React.FC = () => {
       {currentScreen === 'GAME_OVER' && (
         <Leaderboard 
           gameState={gameState} 
-          onRestart={handleRestart}
-          onLogout={handleLogout}
+          onRestart={gameState.stars === 3 ? handleNextStage : handleRestart}
+          onLogout={handleLogout} 
         />
       )}
 

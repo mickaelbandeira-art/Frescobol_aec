@@ -50,10 +50,12 @@ const SPEED_INCREMENT = 0.12;
 const GameCanvas: React.FC<GameCanvasProps> = ({ gameState, onGameOver, onBack }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   // Start score from the cumulative total session score
-  const [score, setScore] = useState(gameState.totalScore);
+  const [playerPoints, setPlayerPoints] = useState(0);
+  const [opponentPoints, setOpponentPoints] = useState(0);
   const [rally, setRally] = useState(0);
-  const [lives, setLives] = useState(3);
-  const [time, setTime] = useState(0);
+  const [lives, setLives] = useState(3); // Lives still used for game over if player misses too much? 
+  // User said "Best of 3", usually that means 3 attempts/points. 
+  // I'll use Points as the main stage win/loss and remove the concept of "lives" for this mode.
   const [isPortrait, setIsPortrait] = useState(false);
   
   const CANVAS_WIDTH = 1200;
@@ -66,7 +68,7 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ gameState, onGameOver, onBack }
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
+    const secs = Math.floor(seconds % 60);
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
@@ -74,6 +76,10 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ gameState, onGameOver, onBack }
   const ballRef = useRef({ x: CANVAS_WIDTH / 2, y: CANVAS_HEIGHT / 2, vx: currentInitialSpeed, vy: 2, scale: 1 });
   const playerYRef = useRef(CANVAS_HEIGHT / 2);
   const opponentYRef = useRef(CANVAS_HEIGHT / 2);
+  const playerPointsRef = useRef(0);
+  const opponentPointsRef = useRef(0);
+  const rallyRef = useRef(0);
+  const timeRef = useRef(0);
   const particlesRef = useRef<Particle[]>([]);
   const popupsRef = useRef<ScorePopup[]>([]);
   const birdsRef = useRef<{x: number, y: number, vx: number, wing: number}[]>([]);
@@ -81,7 +87,13 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ gameState, onGameOver, onBack }
   const rainRef = useRef<RainDrop[]>([]);
   
   const animationFrameRef = useRef<number>(null);
-  const startTimeRef = useRef<number>(Date.now());
+  const startTimeRef = useRef<number>(0); // Initialize as 0, will set on first loop
+  const hasEndedRef = useRef(false); // Guard to prevent multiple onGameOver calls
+  const onGameOverRef = useRef(onGameOver);
+  useEffect(() => {
+    onGameOverRef.current = onGameOver;
+  }, [onGameOver]);
+
   const imagesRef = useRef<{ player: HTMLImageElement | null; opponent: HTMLImageElement | null }>({ player: null, opponent: null });
 
   // Initial environment
@@ -174,33 +186,47 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ gameState, onGameOver, onBack }
     let waveOffset = 0;
 
     const gameLoop = () => {
+      if (startTimeRef.current === 0) startTimeRef.current = Date.now();
+      
       // 0. ENVIRONMENT CALCULATIONS
-      const cycleTime = (Date.now() - startTimeRef.current) % 120000;
+      const cycleTime = (Date.now() - startTimeRef.current) % 600000; // 10 minute cycle
       let dayFactor = 0;
       let sunsetFactor = 0;
       
-      if (cycleTime < 10000) dayFactor = 1 - (cycleTime / 10000);
-      else if (cycleTime >= 10000 && cycleTime < 45000) dayFactor = 0;
-      else if (cycleTime >= 45000 && cycleTime < 60000) {
-        dayFactor = (cycleTime - 45000) / 15000;
-        sunsetFactor = Math.sin(((cycleTime - 45000) / 15000) * Math.PI);
+      // Starts at Day (0-7 mins), Sunset (7-8 mins), Night (8-9 mins), Sunrise (9-10 mins)
+      if (cycleTime < 420000) {
+        dayFactor = 0; // High Noon / Full Day
+      } else if (cycleTime >= 420000 && cycleTime < 480000) {
+        // Sunset transition
+        const progress = (cycleTime - 420000) / 60000;
+        dayFactor = progress * 0.8;
+        sunsetFactor = Math.sin(progress * Math.PI);
+      } else if (cycleTime >= 480000 && cycleTime < 540000) {
+        dayFactor = 1; // Full Night
+      } else {
+        // Sunrise transition
+        dayFactor = 1 - (cycleTime - 540000) / 60000;
       }
-      else if (cycleTime >= 60000 && cycleTime < 110000) dayFactor = 1;
-      else dayFactor = 1;
 
       // 1. UPDATE
       const aliveTime = Math.floor((Date.now() - startTimeRef.current) / 1000);
-      setTime(aliveTime);
+      timeRef.current = aliveTime;
 
       const ball = ballRef.current;
       ball.x += ball.vx;
       ball.y += ball.vy;
 
-      // Win Condition Check (Cumulative)
-      const winTarget = gameState.boss?.targetScore || 1000;
-      if (score >= winTarget) {
+      // Win/Loss Condition Check (Best of 3)
+      if (playerPointsRef.current >= 2 && !hasEndedRef.current) {
+        hasEndedRef.current = true;
         if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
-        onGameOver(score, aliveTime, lives); // Star count = lives remaining
+        onGameOverRef.current(playerPointsRef.current, opponentPointsRef.current, aliveTime); // Win
+        return;
+      }
+      if (opponentPointsRef.current >= 2 && !hasEndedRef.current) {
+        hasEndedRef.current = true;
+        if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
+        onGameOverRef.current(playerPointsRef.current, opponentPointsRef.current, aliveTime); // Loss
         return;
       }
 
@@ -226,22 +252,32 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ gameState, onGameOver, onBack }
       if (ball.x < PADDLE_WIDTH + BALL_RADIUS) {
           if (Math.abs(ball.y - playerYRef.current) < PADDLE_HEIGHT / 2 + BALL_RADIUS) {
               ball.vx = Math.abs(ball.vx) + currentSpeedIncrement;
+              // Prevent multi-trigger: Force ball out of paddle zone immediately
+              ball.x = PADDLE_WIDTH + BALL_RADIUS + 2; 
+              
               const deltaY = ball.y - playerYRef.current;
-              ball.vy = deltaY * 0.2;
-              setRally(prev => prev + 1);
-              const points = 10 + Math.floor(rally * 1.5);
-              setScore(prev => prev + points);
+              ball.vy = deltaY * 0.23; // Slightly more vertical variety
+              
+              rallyRef.current += 1;
               createBurst(ball.x - BALL_RADIUS, ball.y, '#3B82F6');
-              createScorePopup(ball.x + 20, ball.y, points);
           } else if (ball.x < 0) {
-              if (lives > 1) {
-                  setLives(l => l - 1);
-                  ball.x = CANVAS_WIDTH / 2; ball.y = CANVAS_HEIGHT / 2; ball.vx = currentInitialSpeed; ball.vy = (Math.random() - 0.5) * 4;
-                  setRally(0);
-              } else {
-                onGameOver(score, aliveTime, 0);
+              // PLAYER MISS: Opponent scores
+              opponentPointsRef.current += 1;
+              setOpponentPoints(p => p + 1);
+              createBurst(20, ball.y, '#FF0000');
+              
+              if (opponentPointsRef.current >= 2) {
+                hasEndedRef.current = true;
+                if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
+                onGameOverRef.current(playerPointsRef.current, opponentPointsRef.current, aliveTime);
                 return;
               }
+
+              // Reset Ball
+              ball.x = canvas.width / 2; ball.y = canvas.height / 2; 
+              ball.vx = currentInitialSpeed; 
+              ball.vy = (Math.random() - 0.5) * 4;
+              rallyRef.current = 0;
           }
       }
 
@@ -249,20 +285,31 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ gameState, onGameOver, onBack }
       if (ball.x > canvas.width - PADDLE_WIDTH - BALL_RADIUS) {
           if (Math.abs(ball.y - opponentYRef.current) < PADDLE_HEIGHT / 2 + BALL_RADIUS) {
               ball.vx = -Math.abs(ball.vx) - currentSpeedIncrement;
-              const deltaY = ball.y - opponentYRef.current; // Corrected to use boss paddle position
-              ball.vy = deltaY * 0.2;
-              setRally(prev => prev + 1);
+              // Prevent multi-trigger: Force ball out of paddle zone immediately
+              ball.x = canvas.width - PADDLE_WIDTH - BALL_RADIUS - 2;
+
+              const deltaY = ball.y - opponentYRef.current; 
+              ball.vy = deltaY * 0.23;
+              rallyRef.current += 1;
               createBurst(ball.x + BALL_RADIUS, ball.y, '#EAC086');
           } else if (ball.x > canvas.width) {
-              // BOSS MISS: Reset ball, NO life lost, add bonus points
-              const missBonus = 50 + (bossDifficulty * 20);
-              setScore(prev => prev + missBonus);
-              createScorePopup(canvas.width - 100, ball.y, missBonus);
+              // BOSS MISS: Player scores
+              playerPointsRef.current += 1;
+              setPlayerPoints(p => p + 1);
+              createBurst(canvas.width - 20, ball.y, '#00FF00');
               
-              ball.x = CANVAS_WIDTH / 2; ball.y = CANVAS_HEIGHT / 2; 
+              if (playerPointsRef.current >= 2) {
+                hasEndedRef.current = true;
+                if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
+                onGameOverRef.current(playerPointsRef.current, opponentPointsRef.current, aliveTime);
+                return;
+              }
+
+              // Reset Ball
+              ball.x = canvas.width / 2; ball.y = canvas.height / 2; 
               ball.vx = -currentInitialSpeed; 
               ball.vy = (Math.random() - 0.5) * 4;
-              setRally(0);
+              rallyRef.current = 0;
           }
       }
 
@@ -339,6 +386,51 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ gameState, onGameOver, onBack }
       skyGrad.addColorStop(0, currentSkyTop); skyGrad.addColorStop(1, currentSkyBottom);
       ctx.fillStyle = skyGrad; ctx.fillRect(0, 0, canvas.width, horizonY);
 
+      // Celestial Bodies with Glow (Drawn BEFORE Sea to be behind)
+      if (dayFactor < 1) { // Sun
+        ctx.save();
+        ctx.globalAlpha = 1 - dayFactor;
+        const sunX = canvas.width * 0.7;
+        const sunProg = Math.min(cycleTime / 420000, 1); // Adjusted for new cycle
+        const sunY = horizonY - Math.sin(sunProg * Math.PI) * (horizonY - 80);
+        
+        const sunGlow = ctx.createRadialGradient(sunX, sunY, 15, sunX, sunY, 200);
+        sunGlow.addColorStop(0, sunsetFactor > 0 ? 'rgba(255, 87, 51, 0.4)' : 'rgba(255, 255, 200, 0.4)');
+        sunGlow.addColorStop(1, 'rgba(255, 150, 50, 0)');
+        ctx.fillStyle = sunGlow;
+        ctx.beginPath(); ctx.arc(sunX, sunY, 200, 0, Math.PI * 2); ctx.fill();
+
+        ctx.fillStyle = sunsetFactor > 0 ? '#FFC300' : '#FFFDE7';
+        ctx.beginPath(); ctx.arc(sunX, sunY, 50, 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
+      }
+      if (dayFactor > 0) { // Moon & Stars
+        ctx.save();
+        ctx.globalAlpha = dayFactor;
+        const moonX = canvas.width * 0.2;
+        const nightProg = (cycleTime >= 480000) ? (cycleTime - 480000) / 60000 : 0;
+        const moonY = horizonY - Math.sin(nightProg * Math.PI) * (horizonY - 100);
+        
+        ctx.fillStyle = '#FFFFFF';
+        for (let i = 0; i < 30; i++) {
+          const sFactor = Math.abs(Math.sin(waveOffset * 0.4 + i));
+          ctx.globalAlpha = dayFactor * sFactor;
+          const sx = (Math.sin(i * 999) * 0.5 + 0.5) * canvas.width;
+          const sy = (Math.cos(i * 888) * 0.5 + 0.5) * (horizonY - 50);
+          ctx.fillRect(sx, sy, 2, 2);
+        }
+
+        const moonGlow = ctx.createRadialGradient(moonX, moonY, 10, moonX, moonY, 150);
+        moonGlow.addColorStop(0, 'rgba(255, 255, 255, 0.3)');
+        moonGlow.addColorStop(1, 'rgba(255, 255, 255, 0)');
+        ctx.fillStyle = moonGlow;
+        ctx.beginPath(); ctx.arc(moonX, moonY, 150, 0, Math.PI * 2); ctx.fill();
+
+        ctx.fillStyle = '#FFF9C4';
+        ctx.beginPath(); ctx.arc(moonX, moonY, 35, 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
+      }
+
       // Sea
       const seaGrad = ctx.createLinearGradient(0, horizonY, 0, shorelineY);
       seaGrad.addColorStop(0, seaTop); seaGrad.addColorStop(1, seaBottom);
@@ -347,7 +439,7 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ gameState, onGameOver, onBack }
       // Reflection of Celestial Bodies
       const targetX = dayFactor < 0.5 ? canvas.width * 0.7 : canvas.width * 0.2;
       const reflectGrad = ctx.createLinearGradient(targetX - 70, horizonY, targetX + 70, horizonY);
-      const reflectColor = dayFactor < 0.5 ? (sunsetFactor > 0 ? 'rgba(255, 87, 51, 0.2)' : 'rgba(255, 223, 0, 0.15)') : 'rgba(200, 230, 255, 0.08)';
+      const reflectColor = dayFactor < 0.1 ? (sunsetFactor > 0 ? 'rgba(255, 87, 51, 0.2)' : 'rgba(255, 223, 0, 0.15)') : 'rgba(200, 230, 255, 0.08)';
       reflectGrad.addColorStop(0, 'transparent');
       reflectGrad.addColorStop(0.5, reflectColor);
       reflectGrad.addColorStop(1, 'transparent');
@@ -405,50 +497,7 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ gameState, onGameOver, onBack }
       for (let i = 0; i <= canvas.width; i += 20) ctx.lineTo(i, shorelineY + washDepth + Math.sin(i * 0.05 + waveOffset * 2) * 10);
       ctx.lineTo(canvas.width, shorelineY); ctx.fill();
 
-      // Celestial Bodies with Glow (Higher Arc)
-      if (dayFactor < 1) { // Sun
-        ctx.save();
-        ctx.globalAlpha = 1 - dayFactor;
-        const sunX = canvas.width * 0.7;
-        const sunProg = Math.min(cycleTime / 60000, 1);
-        const sunY = horizonY - Math.sin(sunProg * Math.PI) * (horizonY - 80);
-        
-        const sunGlow = ctx.createRadialGradient(sunX, sunY, 15, sunX, sunY, 200);
-        sunGlow.addColorStop(0, sunsetFactor > 0 ? 'rgba(255, 87, 51, 0.4)' : 'rgba(255, 255, 200, 0.4)');
-        sunGlow.addColorStop(1, 'rgba(255, 150, 50, 0)');
-        ctx.fillStyle = sunGlow;
-        ctx.beginPath(); ctx.arc(sunX, sunY, 200, 0, Math.PI * 2); ctx.fill();
 
-        ctx.fillStyle = sunsetFactor > 0 ? '#FFC300' : '#FFFDE7';
-        ctx.beginPath(); ctx.arc(sunX, sunY, 50, 0, Math.PI * 2); ctx.fill();
-        ctx.restore();
-      }
-      if (dayFactor > 0) { // Moon & Stars
-        ctx.save();
-        ctx.globalAlpha = dayFactor;
-        const moonX = canvas.width * 0.2;
-        const nightProg = (cycleTime >= 60000) ? (cycleTime - 60000) / 60000 : (cycleTime / 60000);
-        const moonY = horizonY - Math.sin(nightProg * Math.PI) * (horizonY - 100);
-        
-        ctx.fillStyle = '#FFFFFF';
-        for (let i = 0; i < 30; i++) {
-          const sFactor = Math.abs(Math.sin(waveOffset * 0.4 + i));
-          ctx.globalAlpha = dayFactor * sFactor;
-          const sx = (Math.sin(i * 999) * 0.5 + 0.5) * canvas.width;
-          const sy = (Math.cos(i * 888) * 0.5 + 0.5) * (horizonY - 50);
-          ctx.fillRect(sx, sy, 2, 2);
-        }
-
-        const moonGlow = ctx.createRadialGradient(moonX, moonY, 10, moonX, moonY, 150);
-        moonGlow.addColorStop(0, 'rgba(200, 230, 255, 0.3)');
-        moonGlow.addColorStop(1, 'rgba(100, 150, 255, 0)');
-        ctx.fillStyle = moonGlow;
-        ctx.beginPath(); ctx.arc(moonX, moonY, 150, 0, Math.PI * 2); ctx.fill();
-
-        ctx.fillStyle = '#F0F4FF';
-        ctx.beginPath(); ctx.arc(moonX, moonY, 40, 0, Math.PI * 2); ctx.fill();
-        ctx.restore();
-      }
 
       // Birds (Seagulls)
       const drawBirds = () => {
@@ -547,34 +596,52 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ gameState, onGameOver, onBack }
       ctx.beginPath(); ctx.arc(ball.x, ball.y, BALL_RADIUS * 1.2, 0, Math.PI * 2); ctx.fill();
       ctx.shadowBlur = 0;
 
-      // HUD (Centered) - Increased font size for mobile scaling
-      ctx.fillStyle = '#FFFFFF'; ctx.font = '900 48px Inter'; ctx.textAlign = 'center';
-      ctx.fillText(`PONTOS: ${score}`, canvas.width / 2, 60);
+      // HUD BACKGROUND STRIP
+      ctx.fillStyle = 'rgba(0,0,0,0.3)';
+      ctx.fillRect(canvas.width / 2 - 300, 20, 600, 120);
       
-      const hudTarget = gameState.boss?.targetScore || 1000;
-      const progress = Math.min(score / hudTarget, 1);
+      // HUD MATCH SCORE (Top Center)
+      ctx.textAlign = 'center';
+      ctx.font = `900 ${canvas.width < 500 ? 24 : 48}px Inter`;
+      ctx.fillStyle = '#FFFFFF';
+      ctx.shadowBlur = 10; ctx.shadowColor = 'rgba(0,0,0,0.5)';
+      const matchScoreText = `VOCÊ ${playerPointsRef.current} - ${opponentPointsRef.current} ${gameState.boss?.name.split(' ')[0].toUpperCase()}`;
+      ctx.fillText(matchScoreText, canvas.width / 2, 110);
       
-      ctx.fillStyle = 'rgba(255,255,255,0.2)'; ctx.fillRect(canvas.width / 2 - 200, 70, 400, 15);
-      ctx.fillStyle = gameState.product?.color || '#FF4B2B'; ctx.fillRect(canvas.width / 2 - 200, 70, 400 * progress, 15);
-      ctx.fillStyle = '#FFFFFF'; ctx.font = '700 16px Inter'; 
-      ctx.fillText(`META DESTA FASE: ${hudTarget} | TEMPO: ${formatTime(time)}`, canvas.width / 2, 110);
+      // Timer (Primary Milestone)
+      ctx.font = `700 ${canvas.width < 500 ? 16 : 24}px Inter`;
+      ctx.fillStyle = '#FFD700';
+      ctx.fillText(`TEMPO: ${formatTime(timeRef.current)}`, canvas.width / 2, 160);
+      ctx.shadowBlur = 0;
 
-      // BOSS & PRODUCT INFO (Moved to avoid overlap)
+
+      // BOSS INFO (Top Right)
       ctx.textAlign = 'right'; ctx.font = '900 18px Inter'; ctx.fillStyle = '#FFFFFF';
       ctx.fillText(gameState.boss?.name.toUpperCase() || 'BOSS', canvas.width - 100, 40);
       ctx.font = '700 12px Inter'; ctx.fillStyle = '#FF4E6B';
       ctx.fillText(gameState.boss?.role.toUpperCase() || 'GESTOR', canvas.width - 100, 60);
-      
-      // Draw Boss Headshot in HUD (top right)
       drawAvatarHeader(canvas.width - 50, 50, imagesRef.current.opponent);
-      
-      ctx.textAlign = 'left'; ctx.font = '900 18px Inter'; ctx.fillStyle = '#FFFFFF';
-      ctx.fillText(`${(gameState.product?.name || 'GERAL').toUpperCase()} | ${(gameState.player?.name || 'PLAYER').toUpperCase()}`, 40, 65);
 
-      // Lives
+      // PLAYER INFO (Top Left)
+      const padding = canvas.width < 500 ? 20 : 40;
+      const fontSize = canvas.width < 500 ? 12 : 18;
+      ctx.textAlign = 'left'; 
+      ctx.font = `900 ${fontSize}px Inter`; 
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillText(`${(gameState.product?.name || 'GERAL').toUpperCase()} | ${(gameState.player?.name || 'PLAYER').toUpperCase()}`, padding, 65);
+
+      // LIVES (Stars)
+      const starSize = canvas.width < 500 ? 15 : 24;
       for (let i = 0; i < lives; i++) {
-        ctx.fillStyle = '#FF4B2B'; ctx.beginPath(); ctx.arc(40 + i * 30, 95, 8, 0, Math.PI * 2); ctx.fill();
+        ctx.font = `${starSize}px serif`;
+        ctx.fillText('⭐', padding + (i * (starSize + 5)), canvas.width < 500 ? 95 : 105);
       }
+
+      // Time (Bottom Center) - Fixed variable
+      ctx.textAlign = 'center'; 
+      ctx.font = `900 ${canvas.width < 500 ? 24 : 40}px Inter`;
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillText(formatTime(timeRef.current), canvas.width / 2, canvas.height - 40);
 
       animationFrameRef.current = requestAnimationFrame(gameLoop);
     };
@@ -586,7 +653,7 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ gameState, onGameOver, onBack }
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('touchmove', handleTouchMove);
     };
-  }, [gameState, onGameOver, score, rally, lives]);
+  }, [onGameOver, lives, gameState.currentStageIndex, gameState.boss?.targetScore]);
 
   return (
     <div 

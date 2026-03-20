@@ -10,6 +10,8 @@ interface LoginScreenProps {
 
 const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, onBack, preSelectedProductId }) => {
   const [name, setName] = useState('');
+  const [matricula, setMatricula] = useState('');
+  const [loginType, setLoginType] = useState<'colaborador' | 'cliente'>('cliente');
   const [selectedProductId, setSelectedProductId] = useState(preSelectedProductId || '');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -21,8 +23,9 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, onBack, preSelectedP
     setTimeout(() => {
       onLogin({ 
         email: `${name.toLowerCase().replace(/\s+/g, '.')}@aec.com.br`, 
-        product_id: selectedProductId,
-        matricula: selectedProductId // Use product as matricula for clients
+        product_id: loginType === 'cliente' ? selectedProductId : '',
+        matricula: loginType === 'colaborador' ? matricula : (selectedProductId || 'CLIENTE'),
+        type: loginType
       });
       setIsSubmitting(false);
     }, 1000);
@@ -43,14 +46,36 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, onBack, preSelectedP
         <span>←</span> VOLTAR
       </button>
 
-      <div className="relative z-10 w-full max-w-lg bg-white/95 rounded-[25px] md:rounded-[40px] p-5 md:p-12 shadow-2xl border-4 md:border-8 border-[#3164F4]">
-        <div className="text-center mb-4 md:mb-10">
-          <img src="/assets/logo_summer.png" alt="Logo" className="max-w-[120px] md:max-w-[200px] mx-auto mb-3 md:mb-4" />
-          <h2 className="text-xl md:text-3xl font-black text-[#3164F4] uppercase tracking-tighter">Acesse o Jogo</h2>
-          <p className="text-slate-500 font-bold uppercase text-[9px] md:text-xs tracking-widest mt-0.5 md:mt-2">Identificação Corporativa</p>
+      <div className="relative z-10 w-full max-w-lg bg-white/95 rounded-[25px] md:rounded-[40px] p-4 md:p-8 shadow-2xl border-4 md:border-8 border-[#3164F4]">
+        <div className="text-center mb-3 md:mb-6">
+          <img src="/assets/logo_summer.png" alt="Logo" className="max-w-[80px] md:max-w-[120px] mx-auto mb-2 md:mb-4" />
+          <h2 className="text-xl md:text-3xl font-black text-[#3164F4] uppercase tracking-tighter leading-none">Acesse o Jogo</h2>
+          <p className="text-slate-500 font-bold uppercase text-[8px] md:text-xs tracking-widest mt-1 md:mt-2">Identificação Corporativa</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-8">
+        {/* Login Type Toggle */}
+        <div className="flex bg-slate-100 p-1 md:p-1.5 rounded-xl md:rounded-2xl border-2 md:border-4 border-slate-200 mb-6 md:mb-10">
+          <button
+            type="button"
+            className={`flex-1 py-2 md:py-3.5 rounded-lg md:rounded-xl font-black text-[9px] md:text-sm uppercase tracking-widest transition-all duration-300 ${
+              loginType === 'colaborador' ? 'bg-[#3164F4] text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'
+            }`}
+            onClick={() => setLoginType('colaborador')}
+          >
+            Colaborador
+          </button>
+          <button
+            type="button"
+            className={`flex-1 py-2 md:py-3.5 rounded-lg md:rounded-xl font-black text-[9px] md:text-sm uppercase tracking-widest transition-all duration-300 ${
+              loginType === 'cliente' ? 'bg-[#3164F4] text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'
+            }`}
+            onClick={() => setLoginType('cliente')}
+          >
+            Cliente
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4 md:space-y-8">
           <div className="space-y-1 md:space-y-2">
             <label className="block text-[#3164F4] text-[9px] md:text-sm font-black uppercase tracking-widest px-2">
               Nome Completo
@@ -65,7 +90,21 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, onBack, preSelectedP
             />
           </div>
 
-          {!preSelectedProductId && (
+          {loginType === 'colaborador' ? (
+            <div className="space-y-1 md:space-y-2">
+              <label className="block text-[#3164F4] text-[9px] md:text-sm font-black uppercase tracking-widest px-2">
+                Matrícula
+              </label>
+              <input 
+                type="text" 
+                required
+                placeholder="Ex: 123456"
+                className="w-full bg-slate-100 border-2 md:border-4 border-slate-200 p-3 md:p-5 rounded-xl md:rounded-2xl text-[#1A2B3C] text-sm md:text-lg font-bold focus:outline-none focus:border-[#3164F4] transition-all duration-300 placeholder:text-slate-400"
+                value={matricula}
+                onChange={(e) => setMatricula(e.target.value)}
+              />
+            </div>
+          ) : !preSelectedProductId && (
             <div className="space-y-1 md:space-y-2">
               <label className="block text-[#3164F4] text-[9px] md:text-sm font-black uppercase tracking-widest px-2">
                 Escolha seu Produto (Cliente)

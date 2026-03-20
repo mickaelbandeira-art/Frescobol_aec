@@ -14,43 +14,49 @@ interface StageSelectProps {
 const StageSelect: React.FC<StageSelectProps> = ({ unlockedIndex, onSelect, onBack, onLogout, onShowRanking, user }) => {
   return (
     <div 
-      className="h-screen w-screen bg-cover bg-center flex flex-col p-4 md:p-6 relative overflow-hidden"
+      className="h-screen w-screen bg-cover bg-center flex flex-col items-center p-3 md:p-8 relative overflow-hidden" 
       style={{ backgroundImage: "url('/assets/beach_bg.png')" }}
     >
-      <div className="absolute inset-0 bg-white/20 backdrop-blur-[2px]" />
+      <div className="absolute inset-0 bg-white/10 backdrop-blur-[2px]" />
 
-      <header className="relative z-10 max-w-7xl mx-auto w-full flex flex-col md:flex-row justify-between items-center md:items-start gap-3 md:gap-4 mb-3 md:mb-8">
-        <div className="bg-white/95 p-3 md:p-6 rounded-[20px] md:rounded-[40px] border-[3px] md:border-8 border-[#3164F4] shadow-2xl transform md:-rotate-1 text-center md:text-left transition-all">
-          <h2 className="text-lg md:text-4xl font-black uppercase tracking-tighter leading-none text-[#3164F4]">
+      {/* Header section with Logo & Title */}
+      <div className="relative z-10 w-full max-w-5xl flex flex-col items-center mb-4 md:mb-12">
+        <div className="bg-white/95 rounded-[20px] md:rounded-[40px] p-3 md:p-8 shadow-2xl border-2 md:border-8 border-[#3164F4] text-center w-full max-w-[280px] md:max-w-xl">
+          <h1 className="text-xl md:text-5xl font-black text-[#3164F4] uppercase leading-none tracking-tighter">
             Hierarquia <span className="text-[#FF4E6B]">Corporativa</span>
-          </h2>
-          <p className="mt-0.5 md:mt-1 text-slate-600 font-bold uppercase text-[7px] md:text-xs tracking-widest">
-            Olá, <span className="text-[#3164F4]">{user?.email?.split('@')[0] || 'Player'}</span>! Vença os gestores para subir.
+          </h1>
+          <p className="text-[8px] md:text-sm text-slate-500 font-black mt-1 md:mt-3 tracking-widest uppercase">
+            Olá, <span className="text-[#3164F4]">{user?.email.split('@')[0] || 'Produtor'}!</span> Vença os gestores para subir.
           </p>
         </div>
-        <div className="flex gap-2 md:gap-4 w-full md:w-auto justify-center sm:justify-end">
+
+        {/* Buttons Row with improved responsiveness */}
+        <div className="grid grid-cols-5 md:flex md:flex-row gap-2 md:gap-4 mt-3 md:mt-8 w-full px-2 md:px-0 max-w-[340px] md:max-w-none">
           <button 
             onClick={onBack}
-            className="flex-1 md:flex-none px-3 py-1.5 md:px-6 md:py-3 bg-white text-[#3164F4] font-black text-[9px] md:text-xs uppercase tracking-widest rounded-full shadow-lg border-2 md:border-4 border-[#3164F4] hover:bg-slate-50 transition-all duration-300"
+            className="col-span-2 md:flex-1 py-2.5 md:py-4 bg-white/95 text-[#3164F4] font-black text-[9px] md:text-lg rounded-xl md:rounded-2xl border-2 md:border-4 border-[#3164F4] hover:bg-[#3164F4] hover:text-white transition-all uppercase tracking-widest shadow-lg"
           >
             ← Voltar
           </button>
+          
           <button 
             onClick={onShowRanking}
-            className="flex-1 md:flex-none px-3 py-1.5 md:px-6 md:py-3 bg-[#FF4E6B] text-white font-black text-[9px] md:text-xs uppercase tracking-widest rounded-full shadow-lg border-2 md:border-4 border-white hover:bg-white hover:text-[#FF4E6B] hover:border-[#FF4E6B] transition-all duration-300 flex items-center justify-center gap-1.5 md:gap-2"
+            className="col-span-2 md:flex-1 py-2.5 md:py-4 bg-[#FF4E6B] text-white font-black text-[9px] md:text-lg rounded-xl md:rounded-2xl border-2 md:border-4 border-[#FF4E6B] hover:bg-white hover:text-[#FF4E6B] transition-all uppercase tracking-widest shadow-lg flex items-center justify-center gap-1 md:gap-2"
           >
-            <span className="text-xs md:text-base">🏆</span> RANKING
+            🏆 <span className="hidden xs:inline">Ranking</span>
           </button>
+
           <button 
             onClick={onLogout}
-            className="px-3 py-1.5 md:px-6 md:py-3 bg-white text-[#3164F4] font-black text-[9px] md:text-xs uppercase tracking-widest rounded-full shadow-lg border-2 md:border-4 border-[#3164F4] hover:bg-[#3164F4] hover:text-white transition-all duration-300"
+            className="col-span-1 md:w-auto md:px-8 py-2.5 md:py-4 bg-white text-slate-400 font-black text-[9px] md:text-lg rounded-xl md:rounded-2xl border-2 md:border-4 border-slate-200 hover:border-red-400 hover:text-red-400 transition-all uppercase"
+            title="Sair"
           >
             Sair
           </button>
         </div>
-      </header>
+      </div>
 
-      <div className="relative z-10 max-w-7xl mx-auto w-full flex-grow flex items-center justify-center min-h-0 overflow-hidden">
+      <div className="relative z-10 w-full max-w-6xl px-4 md:px-0 mx-auto w-full flex-grow flex items-center justify-center min-h-0 overflow-hidden">
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 md:gap-4 w-full max-h-full items-center overflow-y-auto md:overflow-visible px-2 py-2 md:py-4 custom-scrollbar">
           {BOSSES.map((boss, index) => {
             const isUnlocked = index <= unlockedIndex;
@@ -115,10 +121,10 @@ const StageSelect: React.FC<StageSelectProps> = ({ unlockedIndex, onSelect, onBa
                     <div className="space-y-0.5 md:space-y-2 mt-1 md:mt-4 pt-1.5 md:pt-4 border-t-2 border-slate-100">
                       <div className="flex flex-col items-center">
                         <span className="text-[6px] md:text-[9px] font-black text-slate-400 uppercase tracking-widest">
-                          {index < unlockedIndex ? 'SCORE VENCIDO' : 'Meta'}
+                          {index < unlockedIndex ? 'DESAFIO' : 'STATUS'}
                         </span>
                         <span className={`text-[10px] md:text-lg font-black ${index < unlockedIndex ? 'text-[#C5A000]' : 'text-[#3164F4]'}`}>
-                          {boss.targetScore} PT
+                          {index < unlockedIndex ? 'CONCLUÍDO' : 'DISPONÍVEL'}
                         </span>
                       </div>
                     </div>

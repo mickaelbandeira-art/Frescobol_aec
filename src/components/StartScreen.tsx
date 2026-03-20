@@ -63,7 +63,7 @@ const StartScreen: React.FC<StartScreenProps> = ({ onStart }) => {
             <div className="space-y-3 md:space-y-4 text-xs md:text-base font-bold text-slate-700">
               <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-2xl border border-slate-100">
                 <span className="text-2xl md:text-3xl">🎯</span>
-                <p>Escolha seu <strong className="text-[#FF4E6B]">Produto</strong> preferido para começar o desafio.</p>
+                <p>Escolha seu <strong className="text-[#FF4E6B]">Produto</strong> para iniciar sua jornada na <strong className="text-[#3164F4]">AeC</strong>.</p>
               </div>
 
               <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-2xl border border-slate-100">
@@ -72,13 +72,13 @@ const StartScreen: React.FC<StartScreenProps> = ({ onStart }) => {
               </div>
 
               <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-2xl border border-slate-100">
-                <span className="text-2xl md:text-3xl">🎾</span>
-                <p>Não deixe a bola passar! Cada batida aumenta sua <strong className="text-[#3164F4]">Pontuação Acumulada</strong>.</p>
+                <span className="text-2xl md:text-4xl">⭐</span>
+                <p>Você tem <strong className="text-[#FF4E6B]">3 Estrelas</strong>. Perder um set custa uma! Vencer por <strong className="text-[#3164F4]">2-0</strong> te dá uma estrela extra.</p>
               </div>
 
               <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-2xl border border-slate-100">
-                <span className="text-2xl md:text-3xl">📈</span>
-                <p>Alcance a meta de pontos para vencer o <strong className="text-[#FF4E6B]">Gestor</strong> e subir na hierarquia!</p>
+                <span className="text-2xl md:text-3xl">🏆</span>
+                <p>Cada desafio é um <strong className="text-[#3164F4]">Melhor de 3</strong>. Vença 2 sets para derrotar o <strong className="text-[#FF4E6B]">Gestor</strong>!</p>
               </div>
 
               <div className="flex items-center gap-3 p-3 bg-[#FFD700]/10 rounded-2xl border-2 border-[#FFD700]/30 text-center">

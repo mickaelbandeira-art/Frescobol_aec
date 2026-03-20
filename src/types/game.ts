@@ -5,6 +5,7 @@ export interface User {
   email: string;
   matricula?: string;
   product_id?: string;
+  type?: 'colaborador' | 'cliente';
 }
 
 export interface Product {
@@ -36,6 +37,7 @@ export interface GameState {
   timeElapsed: number;
   stars: number;
   totalScore: number;
+  lastStageTime: number;
 }
 
 export interface LeaderboardEntry {
