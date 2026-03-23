@@ -7,6 +7,7 @@ interface LeaderboardProps {
   gameState: GameState;
   onRestart: () => void;
   onLogout: () => void;
+  onNextPhase?: () => void;
 }
 
 // Extend LeaderboardEntry for internal UI needs
@@ -15,7 +16,7 @@ interface EnhancedLeaderboardEntry extends LeaderboardEntry {
   matricula: string;
 }
 
-const Leaderboard: React.FC<LeaderboardProps> = ({ gameState, onRestart, onLogout }) => {
+const Leaderboard: React.FC<LeaderboardProps> = ({ gameState, onRestart, onLogout, onNextPhase }) => {
   const [rankings, setRankings] = useState<EnhancedLeaderboardEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -96,9 +97,9 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ gameState, onRestart, onLogou
              <div className="skew-x-[2deg]">
                 <div className="flex flex-col md:flex-row justify-between items-center gap-6">
                   <div className="flex-1">
-                    <span className="text-[#FF4E6B] font-black text-sm md:text-xl uppercase tracking-widest mb-2 block">Desafio Concluído</span>
+                    <span className="text-[#FF4E6B] font-black text-sm md:text-xl uppercase tracking-widest mb-2 block">{isWin ? 'Desafio Concluído' : 'Desafio Falhou'}</span>
                     <h2 className="text-4xl md:text-7xl font-black text-[#3164F4] uppercase tracking-tighter leading-[0.9] mb-4">
-                      {gameState.player?.name} <span className="text-[#FF4E6B]">VENCEU</span> {gameState.boss.name}!
+                      {gameState.player?.name} <span className="text-[#FF4E6B]">{isWin ? 'VENCEU' : 'PERDEU PARA'}</span> {gameState.boss.name}!
                     </h2>
                     <div className="flex gap-4">
                       <div className="bg-slate-100 px-6 py-3 border-b-4 border-slate-300">
@@ -109,6 +110,15 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ gameState, onRestart, onLogou
                         <span className="block text-[10px] font-black text-white/50 uppercase tracking-widest">Tempo Total</span>
                         <span className="text-2xl md:text-4xl font-black text-white">{formatTime(gameState.totalScore)}</span>
                       </div>
+                      {onNextPhase && (
+                        <button 
+                          onClick={onNextPhase} 
+                          className="bg-[#FF4E6B] md:ml-4 px-6 md:px-8 py-3 border-b-4 border-[#E03A56] hover:bg-[#E03A56] hover:-translate-y-1 transition-all flex flex-col justify-center items-center group cursor-pointer skew-x-[0deg]"
+                        >
+                          <span className="block text-[10px] font-black text-white/80 uppercase tracking-widest group-hover:text-white transition-colors">Avançar para</span>
+                          <span className="text-xl md:text-2xl font-black text-white uppercase mt-0.5 leading-none">Próxima Fase</span>
+                        </button>
+                      )}
                     </div>
                   </div>
                   
@@ -122,7 +132,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ gameState, onRestart, onLogou
                         className="relative w-32 h-32 md:w-48 md:h-48 rounded-full border-4 border-white shadow-2xl object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
                       />
                       <div className="absolute -bottom-2 -right-2 bg-[#FF4E6B] text-white p-2 rounded-full shadow-lg border-2 border-white">
-                        <span className="text-xl">💔</span>
+                        <span className="text-xl">{isWin ? '💔' : '🏆'}</span>
                       </div>
                     </div>
                   </div>

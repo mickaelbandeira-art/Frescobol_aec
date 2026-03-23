@@ -26,7 +26,7 @@ const StageSelect: React.FC<StageSelectProps> = ({ unlockedIndex, onSelect, onBa
             Hierarquia <span className="text-[#FF4E6B]">Corporativa</span>
           </h1>
           <p className="text-[8px] md:text-sm text-slate-500 font-black mt-1 md:mt-3 tracking-widest uppercase">
-            Olá, <span className="text-[#3164F4]">{user?.email.split('@')[0] || 'Produtor'}!</span> Vença os gestores para subir.
+            Olá, <span className="text-[#3164F4]">{user?.email.split('@')[0] || 'Player'}!</span> {unlockedIndex >= BOSSES.length ? <span className="text-[#FFD700] ml-1">VOCÊ É O CAMPEÃO(A)!</span> : 'Vença os gestores para subir.'}
           </p>
         </div>
 
@@ -149,12 +149,20 @@ const StageSelect: React.FC<StageSelectProps> = ({ unlockedIndex, onSelect, onBa
       </div>
 
       <div className="relative z-10 mt-3 md:mt-8 text-center pb-1">
-        <div className="inline-flex items-center gap-2 md:gap-4 bg-black/40 backdrop-blur-xl px-4 py-1.5 md:px-10 md:py-3 rounded-full border border-white/20 shadow-2xl">
-          <span className="text-[#FF4E6B] text-sm md:text-xl animate-pulse">⚡</span>
+        <div className={`inline-flex items-center gap-2 md:gap-4 bg-black/40 backdrop-blur-xl px-4 py-1.5 md:px-10 md:py-3 rounded-full border ${unlockedIndex >= BOSSES.length ? 'border-[#FFD700]' : 'border-white/20'} shadow-2xl transition-all duration-500`}>
+          <span className={`${unlockedIndex >= BOSSES.length ? 'text-[#FFD700]' : 'text-[#FF4E6B]'} text-sm md:text-xl animate-pulse`}>
+            {unlockedIndex >= BOSSES.length ? '🏆' : '⚡'}
+          </span>
           <p className="text-white font-black uppercase text-[7px] md:text-xs tracking-widest">
-            Vença <span className="text-[#FF4E6B]">Patrícia Oliveira</span> para o desafio final!
+            {unlockedIndex >= BOSSES.length ? (
+              <span className="text-[#FFD700] drop-shadow-[0_0_10px_rgba(255,215,0,0.8)]">PARABÉNS! VOCÊ ZEROU O JOGO E É O GRANDE CAMPEÃO!</span>
+            ) : (
+              <>Vença <span className="text-[#FF4E6B]">Patrícia Oliveira</span> para o desafio final!</>
+            )}
           </p>
-          <span className="text-[#FF4E6B] text-sm md:text-xl animate-pulse">⚡</span>
+          <span className={`${unlockedIndex >= BOSSES.length ? 'text-[#FFD700]' : 'text-[#FF4E6B]'} text-sm md:text-xl animate-pulse`}>
+            {unlockedIndex >= BOSSES.length ? '🏆' : '⚡'}
+          </span>
         </div>
       </div>
 

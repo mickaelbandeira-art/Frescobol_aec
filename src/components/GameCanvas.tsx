@@ -53,9 +53,6 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ gameState, onGameOver, onBack }
   const [playerPoints, setPlayerPoints] = useState(0);
   const [opponentPoints, setOpponentPoints] = useState(0);
   const [rally, setRally] = useState(0);
-  const [lives, setLives] = useState(3); // Lives still used for game over if player misses too much? 
-  // User said "Best of 3", usually that means 3 attempts/points. 
-  // I'll use Points as the main stage win/loss and remove the concept of "lives" for this mode.
   const [isPortrait, setIsPortrait] = useState(false);
   
   const CANVAS_WIDTH = 1200;
@@ -630,11 +627,18 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ gameState, onGameOver, onBack }
       ctx.fillStyle = '#FFFFFF';
       ctx.fillText(`${(gameState.product?.name || 'GERAL').toUpperCase()} | ${(gameState.player?.name || 'PLAYER').toUpperCase()}`, padding, 65);
 
-      // LIVES (Stars)
+      // LIVES (Stars) representing Campaign Lives
       const starSize = canvas.width < 500 ? 15 : 24;
-      for (let i = 0; i < lives; i++) {
+      const MAX_LIVES = 5;
+      for (let i = 0; i < MAX_LIVES; i++) {
         ctx.font = `${starSize}px serif`;
-        ctx.fillText('⭐', padding + (i * (starSize + 5)), canvas.width < 500 ? 95 : 105);
+        if (i < gameState.lives) {
+          ctx.fillText('⭐', padding + (i * (starSize + 5)), canvas.width < 500 ? 95 : 105);
+        } else {
+          ctx.globalAlpha = 0.3;
+          ctx.fillText('⭐', padding + (i * (starSize + 5)), canvas.width < 500 ? 95 : 105);
+          ctx.globalAlpha = 1.0;
+        }
       }
 
       // Time (Bottom Center) - Fixed variable
@@ -653,7 +657,7 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ gameState, onGameOver, onBack }
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('touchmove', handleTouchMove);
     };
-  }, [onGameOver, lives, gameState.currentStageIndex, gameState.boss?.targetScore]);
+  }, [onGameOver, gameState.lives, gameState.currentStageIndex, gameState.boss?.targetScore]);
 
   return (
     <div 

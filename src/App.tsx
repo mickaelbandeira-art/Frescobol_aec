@@ -373,7 +373,8 @@ const App: React.FC = () => {
       {currentScreen === 'GAME_OVER' && (
         <Leaderboard 
           gameState={gameState} 
-          onRestart={gameState.stars === 3 ? handleNextStage : handleRestart}
+          onRestart={() => setCurrentScreen('STAGE_SELECT')}
+          onNextPhase={gameState.stars >= 2 && gameState.currentStageIndex < 4 ? handleNextStage : undefined}
           onLogout={handleLogout} 
         />
       )}
