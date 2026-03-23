@@ -184,7 +184,7 @@ const App: React.FC = () => {
     setCurrentScreen('STAGE_SELECT');
   }, []);
 
-  const handleRestart = React.useCallback(() => {
+  const handleRestart = React.useCallback(async () => {
     // Full reset for a brand new run
     setGameState(prev => ({
       ...prev,
@@ -192,11 +192,28 @@ const App: React.FC = () => {
       totalScore: 0,
       stars: 0,
       lives: 3,
-      timeElapsed: 0
-      // unlockedStageIndex removed from reset to preserve progression
+      timeElapsed: 0,
+      unlockedStageIndex: 0
     }));
-    setCurrentScreen('STAGE_SELECT');
-  }, []);
+    localStorage.setItem('frescobol_unlocked_stage', '0');
+    
+    if (user?.id) {
+      try {
+        await supabase.from('rankings').upsert({
+          user_id: user.id,
+          product_id: gameState.product?.id || 'GERAL',
+          score: 0,
+          stars: 0,
+          time_elapsed: 0,
+          stage_index: 0
+        }, { onConflict: 'user_id,product_id' });
+      } catch (err) {
+        console.error('Failed to reset ranking:', err);
+      }
+    }
+    
+    setCurrentScreen('START');
+  }, [user, gameState.product]);
 
   const handleNextStage = React.useCallback(() => {
     // Preserve totalScore (cumulative time) and move to stage select
